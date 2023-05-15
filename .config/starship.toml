@@ -1,0 +1,14 @@
+format = """$env_var$all"""
+
+# Inserts a blank line between shell prompts
+add_newline = true
+
+[character]
+success_symbol = " "
+error_symbol = " "
+
+[env_var.USER]
+format = '[$env_value](bold white) '
+variable = "USER"
+disabled = false
+
