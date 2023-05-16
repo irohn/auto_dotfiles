@@ -2,6 +2,9 @@ alias v='nvim'
 alias vi='nvim'
 alias vim='nvim'
 
+alias tm='tmux'
+alias tl='tmux ls'
+
 alias l='ls -lAh'
 alias ll='ls -lAh'
 alias la='ls -lah'
