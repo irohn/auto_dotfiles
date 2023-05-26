@@ -12,6 +12,7 @@
 # symlink the config files
 ln -svf "$(pwd)"/.config/starship.toml "$HOME"/.config/
 ln -svf "$(pwd)"/.config/aliases.zsh "$HOME"/.config/
+ln -svf "$(pwd)"/.config/functions.zsh "$HOME"/.config/
 ln -svf "$(pwd)"/.zshrc "$HOME"/
 ln -svf "$(pwd)"/.config/nvim "$HOME"/.config/
 ln -svf "$(pwd)"/.hushlogin "$HOME"/
