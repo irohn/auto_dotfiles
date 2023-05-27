@@ -80,3 +80,29 @@ function kl() {
         kubectl logs $(kgpc $1 $2) ${@:3}
     fi
 }
+
+function kpf() {
+    if [ -z "$1" ]; then
+        echo "No pod name specified."
+        return 1
+    elif [ -z "$2" ]; then
+        echo "Specify atleast one tunnel (local_port:remote_port)."
+        return 1
+    else
+        echo "press Ctrl + C to stop forwarding"
+        echo "Starting tunnel..."
+        kubectl port-forward $(kgp $1) ${@:2}
+    fi
+}
+
+function thingsboard() {
+    kpf thingsboard ${1:-9090}:9090
+}
+
+function dashboard() {
+    kpf dashboard-viewer ${1:-8000}:8000
+}
+
+function servicetool() {
+    kpf service-tool ${1:-8502}:8502
+}
