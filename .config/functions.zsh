@@ -13,7 +13,27 @@ function kgp() {
         kubectl get pods --all-namespaces -o wide
     else
         kubectl get pods --all-namespaces -o json | \
-        jq -r --arg pattern "$1" '[.items[] | select(.metadata.name | test($pattern)).metadata | "-n " + .namespace + " " + .name][0]'
+        jq -r --arg pattern "$1" \
+        '[.items[] | 
+        select(.metadata.name | test($pattern)).metadata | "-n " + .namespace + " " + .name][0]'
+    fi
+}
+
+function kgpc() {
+    if [ -z "$1" ]; then
+        echo "No pod name specified."
+        return 1
+    elif [ -z "$2" ]; then
+        echo "No container name specified."
+        return 1
+    else
+        kubectl get pods --all-namespaces -o json | \
+        jq -r --arg pod_name "$1" --arg container "$2" \
+        '[.items[] | 
+        select(.metadata.name | test($pod_name)) | 
+        select(.spec.containers[].name | test($container)) | 
+        "-n " + .metadata.namespace + " " + .metadata.name + " -c " + .spec.containers[].name | 
+        select(test($container))][0]'
     fi
 }
 
@@ -22,7 +42,8 @@ function kgd() {
         kubectl get deployments --all-namespaces -o wide
     else
         kubectl get deployments --all-namespaces -o json | \
-        jq -r --arg pattern "$1" '[.items[] | select(.metadata.name | test($pattern)).metadata | "-n " + .namespace + " " + .name][0]'
+        jq -r --arg pattern "$1" '[.items[] | 
+        select(.metadata.name | test($pattern)).metadata | "-n " + .namespace + " " + .name][0]'
     fi
 }
 
@@ -31,7 +52,8 @@ function kgs() {
         kubectl get secrets --all-namespaces -o wide
     else
         kubectl get secrets --all-namespaces -o json | \
-        jq -r --arg pattern "$1" '[.items[] | select(.metadata.name | test($pattern)).metadata | "-n " + .namespace + " " + .name][0]'
+        jq -r --arg pattern "$1" '[.items[] | 
+        select(.metadata.name | test($pattern)).metadata | "-n " + .namespace + " " + .name][0]'
     fi
 }
 
@@ -47,17 +69,14 @@ function kge() {
     fi
 }
 
-function kgpc() {
-    kubectl get pods --all-namespaces -o json | jq -r --arg pod_name $1 --arg container $2 '.items[] | select(.metadata.name | test($pod_name)).spec.containers[] | select(.name | test($container)).name'
-}
-
 function kl() {
     if [ -z "$1" ]; then
         echo "No pod name specified."
+        return 1
     elif [ -z "$2" ]; then
         echo "No container name specified, logging all containers..."
-        kubectl logs $(kgp $1) --all-containers ${@:2} 
+        kubectl logs $(kgp $1) --all-containers ${@:2}
     else
-        kubectl logs $(kgp $1) -c $(kgpc $1 $2) ${@:3}  
+        kubectl logs $(kgpc $1 $2) ${@:3}
     fi
 }
