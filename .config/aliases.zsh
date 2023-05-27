@@ -1,4 +1,5 @@
 #!/bin/zsh
+alias i='printf "hostname: $(hostname)\nuser: $(whoami)\nhome: $HOME\nshell:$SHELL\n"'
 
 alias sz='source ~/.zshrc'
 
