@@ -3,9 +3,7 @@
 alias sz='source ~/.zshrc'
 
 alias v='nvim'
-alias vi='nvim'
-alias vim='nvim'
-alias ovim='vim'
+alias nv='nvim'
 
 alias tm='tmux'
 alias tl='tmux ls'
