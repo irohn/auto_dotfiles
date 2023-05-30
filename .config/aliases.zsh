@@ -3,7 +3,7 @@ alias i='printf "hostname: $(hostname)\nuser: $(whoami)\nhome: $HOME\nshell:$SHE
 
 alias sz='source ~/.zshrc'
 
-alias sshj='ssh -J ${2:-localhost}:2222'
+alias sshj='ssh -J localhost:2222'
 
 alias v='nvim'
 alias nv='nvim'
