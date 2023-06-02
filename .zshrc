@@ -6,8 +6,10 @@ plugins=(git git-flow zsh-syntax-highlighting zsh-autosuggestions dirhistory zsh
 
 # User configuration
 [[ ! -f ~/.kube/.kubeconfig.sh  ]] || source ~/.kube/.kubeconfig.sh
+[[ ! -f ~/.kube/local ]] || export KUBECONFIG="$KUBECONFIG:~/.kube/local"
 [[ ! -f ~/.config/aliases.zsh  ]] || source ~/.config/aliases.zsh
 [[ ! -f ~/.config/functions.zsh  ]] || source ~/.config/functions.zsh
+[[ ! -f ~/.secrets/github.sh ]] || source ~/.secrets/github.sh
 
 # Load oh-my-zsh
 source $ZSH/oh-my-zsh.sh

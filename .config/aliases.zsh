@@ -1,6 +1,7 @@
 #!/bin/zsh
 alias i='printf "hostname: $(hostname)\nuser: $(whoami)\nhome: $HOME\nshell:$SHELL\n"'
 
+alias op='/mnt/c/Program\ Files/1Password\ CLI/op.exe'
 alias sz='source ~/.zshrc'
 
 alias sshj='ssh -J localhost:2222'
@@ -21,3 +22,6 @@ alias kn='kubens'
 alias pods='kubectl get pods --all-namespaces'
 alias wp='watch -n 0.1 kubectl get pods --all-namespaces'
 alias kd='kubectl describe'
+
+alias fl='flux logs -A'
+alias fra='flux reconcile kustomization flux-system --with-source'
