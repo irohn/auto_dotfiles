@@ -1,1 +1,4 @@
 decorations: buttonless
+
+shell:
+  program: $SHELL
