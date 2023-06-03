@@ -41,16 +41,23 @@ ln -svf "$(pwd)"/.config/functions.zsh "$HOME"/.config/
 ln -svf "$(pwd)"/.config/nvim "$HOME"/.config/
 
 # Alacritty config
-if [ $WSL = "true" ]; then
-    windows_username=$(powershell.exe -Command "Set-Location -Path C:\Users; cmd /c echo %username%")
-    windows_username=$(echo $windows_username | tr -d '\r')
-    windows_path="/mnt/c/Users/$windows_username/AppData/Roaming/alacritty"
-    echo "WSL detected, copying files manually into $windows_path"
-    cp -r "$(pwd)/.config/alacritty" "$windows_path"
-    echo "populating alacritty.yml..."
-    echo "import:\n  - $windows_path/default.yml\n  - $windows_path/windows.yml" | sed 's|/mnt/c|C:|g' > "$windows_path/alacritty.yml"
+if [ $OS = "linux" ]; then
+    if [ $WSL = "true" ]; then
+        windows_username=$(powershell.exe -Command "Set-Location -Path C:\Users; cmd /c echo %username%")
+        windows_username=$(echo $windows_username | tr -d '\r')
+        windows_path="/mnt/c/Users/$windows_username/AppData/Roaming/alacritty"
+        echo "WSL detected, copying files manually into $windows_path"
+        cp -r "$(pwd)/.config/alacritty" "$windows_path"
+        echo "populating alacritty.yml..."
+        echo "import:\n  - $windows_path/default.yml\n  - $windows_path/windows.yml" | sed 's|/mnt/c|C:|g' > "$windows_path/alacritty.yml"
+    else
+        ln -svf "$(pwd)"/.config/alacritty "$HOME"/.config/
+    fi
+elif [ $OS = "mac" ]; then
+    echo "MacOS detected, copying files manually"
+    cp -r "$(pwd)"/.config/alacritty "$HOME"/.config/alacritty
 else
-    ln -svf "$(pwd)"/.config/alacritty "$HOME"/.config/
+    echo "OS not supported"
 fi
 
 # symlinks for home config files
