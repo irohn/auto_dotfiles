@@ -1,5 +1,7 @@
 #!/bin/zsh
 
+WSL=false
+
 # Determine which OS we're running on
 if [[ "$OSTYPE" == "linux-gnu"* ]]; then
     echo "Linux detected"
