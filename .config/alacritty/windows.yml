@@ -1,4 +1,5 @@
-decorations: none
+window:
+  decorations: none
 
 shell:
  program: wsl.exe

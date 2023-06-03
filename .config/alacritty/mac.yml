@@ -1,1 +1,2 @@
-decorations: buttonless
+window:
+  decorations: buttonless
