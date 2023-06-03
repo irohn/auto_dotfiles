@@ -1,19 +1,57 @@
-#!/bin/sh
+#!/bin/zsh
+
+# Determine which OS we're running on
+if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+    echo "Linux detected"
+    OS="linux"
+    if wsl.exe --version > /dev/null 2>&1; then
+        echo "WSL detected"
+        WSL=true
+    fi
+elif [[ "$OSTYPE" == "darwin"* ]]; then
+    echo "Mac OSX detected"
+    OS="mac"
+else
+    echo "OS not supported"
+    OS="unknown"
+    exit 1
+fi
+
+
+# ---
+
 
 # Make .config directory if it doesn't exist
 [[ -d ~/.config ]] || mkdir ~/.config
 
-# Backup the old config files if they exist
-# [[ -f ~/.config/starship.toml ]] && mv ~/.config/starship.toml ~/.config/starship.toml.bak
-# [[ -f ~/.config/aliases.zsh ]] && mv ~/.config/aliases.zsh ~/.config/aliases.zsh.bak
-# [[ -f ~/.zshrc ]] && mv ~/.zshrc ~/.zshrc.bak
-# [[ -d ~/.config/nvim ]] && mv ~/.config/nvim ~/.config/nvim.bak
 
-# symlink the config files
+# --- symlinks
+
+
+# Starship config
 ln -svf "$(pwd)"/.config/starship.toml "$HOME"/.config/
+
+# Aliases and functions
 ln -svf "$(pwd)"/.config/aliases.zsh "$HOME"/.config/
 ln -svf "$(pwd)"/.config/functions.zsh "$HOME"/.config/
-ln -svf "$(pwd)"/.zshrc "$HOME"/
+
+# Neovim config
 ln -svf "$(pwd)"/.config/nvim "$HOME"/.config/
+
+# Alacritty config
+if [ $WSL = "true" ]; then
+    windows_username=$(powershell.exe -Command "Set-Location -Path C:\Users; cmd /c echo %username%")
+    windows_username=$(echo $windows_username | tr -d '\r')
+    windows_path="/mnt/c/Users/$windows_username/AppData/Roaming/alacritty"
+    echo "WSL detected, copying files manually into $windows_path"
+    cp -r "$(pwd)/.config/alacritty" "$windows_path"
+    echo "populating alacritty.yml..."
+    echo "import:\n  - $windows_path/default.yml\n  - $windows_path/windows.yml" | sed 's|/mnt/c|C:|g' > "$windows_path/alacritty.yml"
+else
+    ln -svf "$(pwd)"/.config/alacritty "$HOME"/.config/
+fi
+
+# symlinks for home config files
+ln -svf "$(pwd)"/.zshrc "$HOME"/
 ln -svf "$(pwd)"/.tmux.conf "$HOME"/
 ln -svf "$(pwd)"/.hushlogin "$HOME"/
