@@ -56,6 +56,8 @@ if [ $OS = "linux" ]; then
 elif [ $OS = "mac" ]; then
     echo "MacOS detected, copying files manually"
     cp -r "$(pwd)"/.config/alacritty "$HOME"/.config/alacritty
+    echo "populating alacritty.yml..."
+    echo "import:\n  - $HOME/.config/alacritty/default.yml\n  - $HOME/.config/alacritty/mac.yml" > "$HOME"/.config/alacritty/alacritty.yml
 else
     echo "OS not supported"
 fi
