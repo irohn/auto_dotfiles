@@ -1,4 +1,4 @@
 decorations: buttonless
 
 shell:
-  program: $SHELL
+  program: tmux

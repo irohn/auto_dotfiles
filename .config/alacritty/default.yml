@@ -9,7 +9,6 @@ window:
     x: 10  
     y: 1
   dynamic_padding: false
-  decorations: none
   opacity: 0.95
   title: Terminal
 
