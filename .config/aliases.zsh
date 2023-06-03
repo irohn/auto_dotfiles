@@ -25,3 +25,7 @@ alias kd='kubectl describe'
 
 alias fl='flux logs -A'
 alias fra='flux reconcile kustomization flux-system --with-source'
+
+if type "$bat" > /dev/null; then
+  alias cat='bat -p'
+fi
