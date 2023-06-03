@@ -1,4 +1,1 @@
 decorations: buttonless
-
-shell:
-  program: tmux
