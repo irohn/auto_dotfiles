@@ -498,7 +498,6 @@ live_config_reload: true
 shell:
  program: $SHELL
  args:
-   - "~"
    - "tmux attach || tmux"
 
 # Startup directory
