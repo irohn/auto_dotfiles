@@ -62,7 +62,10 @@ else
     echo "OS not supported"
 fi
 
+# symlinks for tmux config and plugins
+ln -svf "$(pwd)"/.config/tmux "$HOME"/.config/
+ln -svf "$(pwd)"/.tmux "$HOME"/
+
 # symlinks for home config files
 ln -svf "$(pwd)"/.zshrc "$HOME"/
-ln -svf "$(pwd)"/.tmux.conf "$HOME"/
 ln -svf "$(pwd)"/.hushlogin "$HOME"/

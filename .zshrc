@@ -15,7 +15,6 @@ source $ZSH/oh-my-zsh.sh
 [[ ! -f ~/.config/aliases.zsh  ]] || source ~/.config/aliases.zsh
 [[ ! -f ~/.config/functions.zsh  ]] || source ~/.config/functions.zsh
 [[ ! -f ~/.secrets/github.sh ]] || source ~/.secrets/github.sh
-[[ ! -f ~/.config/env_vars.zsh ]] || source ~/.config/env_vars.zsh
 
 # Starship init
 eval "$(starship init zsh)"
