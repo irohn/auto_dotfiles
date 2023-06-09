@@ -1,5 +1,24 @@
 #!/bin/zsh
 
+function pods () {
+    current_namespace="$(kubens --current)"
+    if [[ "$current_namespace" == "default" ]]; then
+        kubectl get pods --all-namespaces
+    else
+        kubectl get pods
+    fi
+}
+
+function wp () {
+    current_namespace="$(kubens --current)"
+    if [[ "$current_namespace" == "default" ]]; then
+        watch -n 0.1 "kubectl get pods --all-namespaces"
+    else
+        watch -n 0.1 "kubectl get pods"
+    fi
+}
+
+
 function kga() {
     if [ -z "$1" ]; then
         kubectl get all --all-namespaces -o wide
