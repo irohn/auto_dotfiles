@@ -9,6 +9,12 @@ export PATH="$HOME/.local/bin:$PATH"
 # Load oh-my-zsh
 source $ZSH/oh-my-zsh.sh
 
+# Keybindings
+bindkey "^[[1;3C" forward-word
+bindkey "^[[1;3D" backward-word
+bindkey "^E" end-of-line
+bindkey "^A" beginning-of-line
+
 # User configuration
 [[ ! -f ~/.kube/.kubeconfig.sh  ]] || source ~/.kube/.kubeconfig.sh
 [[ ! -f ~/.kube/local ]] || export KUBECONFIG="$KUBECONFIG:~/.kube/local"
