@@ -16,7 +16,6 @@ alias la='ls -lah'
 alias k='kubectl'
 alias kx='kubectx'
 alias kn='kubens'
-alias kd='kubectl describe'
 
 alias fl='flux logs -A'
 alias fra='flux reconcile kustomization flux-system --with-source'

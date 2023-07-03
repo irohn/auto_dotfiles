@@ -18,42 +18,11 @@ function wp () {
     fi
 }
 
-
 function kga() {
-    if [ -z "$1" ]; then
-        kubectl get all --all-namespaces -o wide
-    else
-        kubectl get all -n $1 -o wide
-    fi
-}
-
-function kgp() {
-    if [ -z "$1" ]; then
-        kubectl get pods --all-namespaces -o wide
-    else
-        kubectl get pods --all-namespaces -o json | \
-        jq -r --arg pattern "$1" \
-        '[.items[] | 
-        select(.metadata.name | test($pattern)).metadata | "-n " + .namespace + " " + .name][0]'
-    fi
-}
-
-function kgpc() {
-    if [ -z "$1" ]; then
-        echo "No pod name specified."
-        return 1
-    elif [ -z "$2" ]; then
-        echo "No container name specified."
-        return 1
-    else
-        kubectl get pods --all-namespaces -o json | \
-        jq -r --arg pod_name "$1" --arg container "$2" \
-        '[.items[] | 
-        select(.metadata.name | test($pod_name)) | 
-        select(.spec.containers[].name | test($container)) | 
-        "-n " + .metadata.namespace + " " + .metadata.name + " -c " + .spec.containers[].name | 
-        select(test($container))][0]'
-    fi
+    kubectl get all --all-namespaces --no-headers -o \
+    custom-columns="KIND":.kind,"NAMESPACE":.metadata.namespace,"NAME":.metadata.name | \
+    fzf --color header:italic --header 'KIND    NAMESPACE    NAME' | \
+    awk '{print "/usr/local/bin/kubectl " "-n " $2 " describe " tolower($1) " " $3}' | sh
 }
 
 function kgd() {
@@ -76,30 +45,6 @@ function kgs() {
     fi
 }
 
-function kdp() {
-    kubectl describe pod $(kgp $1)
-}
-
-function kge() {
-    if [ -z "$1" ]; then
-        kubectl get events --all-namespaces -o wide
-    else
-        kubectl get events -n $1 -o wide
-    fi
-}
-
-function kl() {
-    if [ -z "$1" ]; then
-        echo "No pod name specified."
-        return 1
-    elif [ -z "$2" ]; then
-        echo "No container name specified, logging all containers..."
-        kubectl logs $(kgp $1) --all-containers ${@:2}
-    else
-        kubectl logs $(kgpc $1 $2) ${@:3}
-    fi
-}
-
 function kpf() {
     if [ -z "$1" ]; then
         echo "No pod name specified."
@@ -114,14 +59,36 @@ function kpf() {
     fi
 }
 
-function thingsboard() {
-    kpf thingsboard ${1:-9090}:9090
+function kd() {
+    current_namespace="$(kubens --current)"
+    if [[ "$current_namespace" == "default" ]]; then
+        kubectl get all --all-namespaces --no-headers -o \
+        custom-columns="KIND":.kind,"NAMESPACE":.metadata.namespace,"NAME":.metadata.name | \
+        fzf --color header:italic --header 'KIND    NAMESPACE    NAME' | \
+        awk '{print "/usr/local/bin/kubectl " "-n " $2 " describe " tolower($1) " " $3}' | sh
+    else
+        kubectl get all --no-headers -o \
+        custom-columns="KIND":.kind,"NAMESPACE":.metadata.namespace,"NAME":.metadata.name | \
+        fzf --color header:italic --header 'KIND    NAMESPACE    NAME' | \
+        awk '{print "/usr/local/bin/kubectl " "-n " $2 " describe " tolower($1) " " $3}' | sh
+    fi
 }
 
-function dashboard() {
-    kpf dashboard-viewer ${1:-8000}:8000
-}
-
-function servicetool() {
-    kpf service-tool ${1:-8502}:8502
+function kl() {
+    current_namespace="$(kubens --current)"
+    if [[ "$current_namespace" == "default" ]]; then
+        info=$(kubectl get pods --all-namespaces -o \
+        jsonpath='{range .items[*]}{.metadata.namespace}{" "}{.metadata.name}{" "}{range .spec.containers[*]}{.name}{","}{end}{"\n"}{end}' | \
+        sed 's/.$//' | column -t | \
+        fzf --delimiter=" " --preview 'echo "containers:\n"{-1} | sed "s|,|\n|g" ' --preview-window='border-rounded,down,50%' --exit-0 --select-1)
+        container=$(echo $info | awk '{print $NF}' | sed 's/,/\n/g' | fzf --exit-0 --select-1)
+        /usr/local/bin/kubectl -n $(echo $info | awk '{print $1}') logs $(echo $info | awk '{print $2}') -c $container ${@:1}
+    else
+        info=$(kubectl get pods -o \
+        jsonpath='{range .items[*]}{.metadata.namespace}{" "}{.metadata.name}{" "}{range .spec.containers[*]}{.name}{","}{end}{"\n"}{end}' | \
+        sed 's/.$//' | column -t | \
+        fzf --preview 'echo "containers:\n"{-1} | sed "s|,|\n|g" ' --preview-window='border-rounded,down,50%' --exit-0 --select-1)
+        container=$(echo $info | awk '{print $NF}' | sed 's/,/\n/g' | fzf --exit-0 --select-1)
+        /usr/local/bin/kubectl -n $(echo $info | awk '{print $1}') logs $(echo $info | awk '{print $2}') -c $container ${@:1}
+    fi
 }
