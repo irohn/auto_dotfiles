@@ -1,35 +1,37 @@
 #!/bin/zsh
 
+kubectl_bin_path="$(which kubectl)"
+
 function pods () {
     current_namespace="$(kubens --current)"
     if [[ "$current_namespace" == "default" ]]; then
-        kubectl get pods --all-namespaces
+        $kubectl_bin_path get pods --all-namespaces
     else
-        kubectl get pods
+        $kubectl_bin_path get pods
     fi
 }
 
 function wp () {
     current_namespace="$(kubens --current)"
     if [[ "$current_namespace" == "default" ]]; then
-        watch -n 0.1 "kubectl get pods --all-namespaces"
+        watch -n 0.1 "$kubectl_bin_path get pods --all-namespaces"
     else
-        watch -n 0.1 "kubectl get pods"
+        watch -n 0.1 "$kubectl_bin_path get pods"
     fi
 }
 
 function kga() {
-    kubectl get all --all-namespaces --no-headers -o \
+    $kubectl_bin_path get all --all-namespaces --no-headers -o \
     custom-columns="KIND":.kind,"NAMESPACE":.metadata.namespace,"NAME":.metadata.name | \
     fzf --color header:italic --header 'KIND    NAMESPACE    NAME' | \
-    awk '{print "/usr/local/bin/kubectl " "-n " $2 " describe " tolower($1) " " $3}' | sh
+    awk -v kubectl_bin_path=$kubectl_bin_path '{print kubectl_bin_path" " "-n " $2 " describe " tolower($1) " " $3}' | sh
 }
 
 function kgd() {
     if [ -z "$1" ]; then
-        kubectl get deployments --all-namespaces -o wide
+        $kubectl_bin_path get deployments --all-namespaces -o wide
     else
-        kubectl get deployments --all-namespaces -o json | \
+        $kubectl_bin_path get deployments --all-namespaces -o json | \
         jq -r --arg pattern "$1" '[.items[] | 
         select(.metadata.name | test($pattern)).metadata | "-n " + .namespace + " " + .name][0]'
     fi
@@ -37,58 +39,123 @@ function kgd() {
 
 function kgs() {
     if [ -z "$1" ]; then
-        kubectl get secrets --all-namespaces -o wide
+        $kubectl_bin_path get secrets --all-namespaces -o wide
     else
-        kubectl get secrets --all-namespaces -o json | \
+        $kubectl_bin_path get secrets --all-namespaces -o json | \
         jq -r --arg pattern "$1" '[.items[] | 
         select(.metadata.name | test($pattern)).metadata | "-n " + .namespace + " " + .name][0]'
     fi
 }
 
-function kpf() {
-    if [ -z "$1" ]; then
-        echo "No pod name specified."
-        return 1
-    elif [ -z "$2" ]; then
-        echo "Specify atleast one tunnel (local_port:remote_port)."
-        return 1
-    else
-        echo "press Ctrl + C to stop forwarding"
-        echo "Starting tunnel..."
-        kubectl port-forward $(kgp $1) ${@:2}
-    fi
-}
-
 function kd() {
-    current_namespace="$(kubens --current)"
-    if [[ "$current_namespace" == "default" ]]; then
-        kubectl get all --all-namespaces --no-headers -o \
-        custom-columns="KIND":.kind,"NAMESPACE":.metadata.namespace,"NAME":.metadata.name | \
-        fzf --color header:italic --header 'KIND    NAMESPACE    NAME' | \
-        awk '{print "/usr/local/bin/kubectl " "-n " $2 " describe " tolower($1) " " $3}' | sh
+    if ! [ -z "$1" ]; then
+        pod_pattern="$1"
+        info=$(kubectl get pods --all-namespaces -o json | \
+        jq -r --arg pattern "$pod_pattern" \
+        '[.items[] | select(.metadata.name | test($pattern)) | .kind + " " + .metadata.namespace + " " + .metadata.name][0]')
+        args="describe $(echo $info | awk '{print $1}') -n ${info#* }"
+        echo "$kubectl_bin_path $args" | tr '[:upper:]' '[:lower:]' | sh
+        return 0
     else
-        kubectl get all --no-headers -o \
-        custom-columns="KIND":.kind,"NAMESPACE":.metadata.namespace,"NAME":.metadata.name | \
-        fzf --color header:italic --header 'KIND    NAMESPACE    NAME' | \
-        awk '{print "/usr/local/bin/kubectl " "-n " $2 " describe " tolower($1) " " $3}' | sh
+        current_namespace="$(kubens --current)"
+        if [[ "$current_namespace" == "default" ]]; then
+            $kubectl_bin_path get all --all-namespaces --no-headers -o \
+            custom-columns="KIND":.kind,"NAMESPACE":.metadata.namespace,"NAME":.metadata.name | \
+            fzf --color header:italic --header 'KIND    NAMESPACE    NAME' | \
+            awk -v kubectl_bin_path=$kubectl_bin_path '{print kubectl_bin_path" " "-n " $2 " describe " tolower($1) " " $3}' | sh
+        else
+            $kubectl_bin_path get all --no-headers -o \
+            custom-columns="KIND":.kind,"NAMESPACE":.metadata.namespace,"NAME":.metadata.name | \
+            fzf --color header:italic --header 'KIND    NAMESPACE    NAME' | \
+            awk -v kubectl_bin_path=$kubectl_bin_path '{print kubectl_bin_path" " "-n " $2 " describe " tolower($1) " " $3}' | sh
+        fi
     fi
 }
 
 function kl() {
-    current_namespace="$(kubens --current)"
-    if [[ "$current_namespace" == "default" ]]; then
-        info=$(kubectl get pods --all-namespaces -o \
-        jsonpath='{range .items[*]}{.metadata.namespace}{" "}{.metadata.name}{" "}{range .spec.containers[*]}{.name}{","}{end}{"\n"}{end}' | \
-        sed 's/.$//' | column -t | \
-        fzf --delimiter=" " --preview 'echo "containers:\n"{-1} | sed "s|,|\n|g" ' --preview-window='border-rounded,down,50%' --exit-0 --select-1)
-        container=$(echo $info | awk '{print $NF}' | sed 's/,/\n/g' | fzf --exit-0 --select-1)
-        /usr/local/bin/kubectl -n $(echo $info | awk '{print $1}') logs $(echo $info | awk '{print $2}') -c $container ${@:1}
+    if ! [ -z "$1" ]; then
+        pod_pattern="$1"
+        if ! [ -z "$2" ]; then
+            container_pattern="$2"
+            shift
+            args=$($kubectl_bin_path get pods --all-namespaces -o json | \
+            jq -r --arg pod_name "$pod_pattern" --arg container "$container_pattern" \
+            '[.items[] | 
+            select(.metadata.name | test($pod_name)) | 
+            select(.spec.containers[].name | test($container)) | 
+            .metadata.namespace + " " + .metadata.name + " -c " + .spec.containers[].name | 
+            select(test($container))][0]')
+            echo "$kubectl_bin_path logs -n $args ${@:2}" | sh
+            return 0
+        else
+            info=$($kubectl_bin_path get pods --all-namespaces -o json | \
+            jq -r --arg pattern "$pod_pattern" \
+            '[.items[] | 
+            select(.metadata.name | test($pattern)).metadata | .namespace + " " + .name][0]')
+            container_name=`$kubectl_bin_path get pods -n ${info% *} ${info#* } -o \
+            jsonpath='{range .spec.containers[*]}{.name}{"\n"}{end}' | column -t | \
+            fzf --preview 'echo {}' --preview-window='border-rounded,down,50%' --exit-0 --select-1`
+            args="$info $container_name"
+        fi
+        shift
+        echo "$kubectl_bin_path logs -n $args" | sh
+        return 0
     else
-        info=$(kubectl get pods -o \
-        jsonpath='{range .items[*]}{.metadata.namespace}{" "}{.metadata.name}{" "}{range .spec.containers[*]}{.name}{","}{end}{"\n"}{end}' | \
-        sed 's/.$//' | column -t | \
-        fzf --preview 'echo "containers:\n"{-1} | sed "s|,|\n|g" ' --preview-window='border-rounded,down,50%' --exit-0 --select-1)
-        container=$(echo $info | awk '{print $NF}' | sed 's/,/\n/g' | fzf --exit-0 --select-1)
-        /usr/local/bin/kubectl -n $(echo $info | awk '{print $1}') logs $(echo $info | awk '{print $2}') -c $container ${@:1}
+        current_namespace="$(kubens --current)"
+        if [[ "$current_namespace" == "default" ]]; then
+            info=$($kubectl_bin_path get pods --all-namespaces -o \
+            jsonpath='{range .items[*]}{.metadata.namespace}{" "}{.metadata.name}{" "}{range .spec.containers[*]}{.name}{","}{end}{"\n"}{end}' | \
+            sed 's/.$//' | column -t | \
+            fzf --preview 'echo "containers:\n"{-1} | sed "s|,|\n|g" ' --preview-window='border-rounded,down,50%' --exit-0 --select-1)
+            container=$(echo $info | awk '{print $NF}' | sed 's/,/\n/g' | fzf --exit-0 --select-1)
+            $kubectl_bin_path -n $(echo $info | awk '{print $1}') logs $(echo $info | awk '{print $2}') -c $container
+        else
+            info=$($kubectl_bin_path get pods -o \
+            jsonpath='{range .items[*]}{.metadata.namespace}{" "}{.metadata.name}{" "}{range .spec.containers[*]}{.name}{","}{end}{"\n"}{end}' | \
+            sed 's/.$//' | column -t | \
+            fzf --preview 'echo "containers:\n"{-1} | sed "s|,|\n|g" ' --preview-window='border-rounded,down,50%' --exit-0 --select-1)
+            container=$(echo $info | awk '{print $NF}' | sed 's/,/\n/g' | fzf --exit-0 --select-1)
+            $kubectl_bin_path -n $(echo $info | awk '{print $1}') logs $(echo $info | awk '{print $2}') -c $container
+        fi
+    fi
+}
+
+function kpf() {
+    if ! [ -z "$1" ]; then
+        pod_pattern="$1"
+        if [ -z "$2" ]; then
+            echo "Ports to forward <local_port>:<remote_port> (e.g. 8080:80 8081:443)"
+            read ports
+            echo "Address: 127.0.0.1:$(echo ${ports%:*})"
+        else
+            ports="${@:2}"
+            echo "Address: 127.0.0.1:$(echo ${ports%:*})"
+        fi
+        cmd="$kubectl_bin_path port-forward `$kubectl_bin_path get pods --all-namespaces -o json | \
+        jq -r --arg pattern "$pod_pattern" \
+        '[.items[] | 
+        select(.metadata.name | test($pattern)).metadata | "-n " + .namespace + " " + .name][0]'` $ports"
+        echo "$cmd" | sh
+    else
+        current_namespace="$(kubens --current)"
+        if [[ "$current_namespace" == "default" ]]; then
+            info=$($kubectl_bin_path get pods --all-namespaces -o \
+            jsonpath='{range .items[*]}{.metadata.namespace}{" "}{.metadata.name}{"\n"}{end}' | \
+            column -t | \
+            fzf --preview 'echo "Pod: "{2}' --preview-window='border-rounded,down,50%' --exit-0 --select-1)
+            echo "Ports to forward <local_port>:<remote_port> (e.g. 8080:80 8081:443)"
+            read ports
+            echo "Address: 127.0.0.1:$(echo ${ports%:*})"
+            echo "$kubectl_bin_path port-forward -n $info $ports" | sh
+        else
+            info=$($kubectl_bin_path get pods -o \
+            jsonpath='{range .items[*]}{.metadata.namespace}{" "}{.metadata.name}{"\n"}{end}' | \
+            column -t | \
+            fzf --preview 'echo "Pod: "{2}' --preview-window='border-rounded,down,50%' --exit-0 --select-1)
+            echo "Ports to forward <local_port>:<remote_port> (e.g. 8080:80 8081:443)"
+            read ports
+            echo "Address: 127.0.0.1:$(echo ${ports%:*})"
+            echo "$kubectl_bin_path port-forward -n $info $ports" | sh
+        fi
     fi
 }
