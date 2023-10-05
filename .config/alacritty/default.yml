@@ -14,7 +14,7 @@ window:
 
 font:
   normal:
-    family: FiraCode Nerd Font
+    family: CaskaydiaCove Nerd Font
   size: 14
 
 live_config_reload: true
