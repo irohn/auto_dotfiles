@@ -2,6 +2,10 @@
 
 kubectl_bin_path="$(which kubectl)"
 
+function kx () {
+    tailscale configure kubeconfig $(tailscale status | awk '/k3s-/ {print $2}' | fzf)
+}
+
 function pods () {
     current_namespace="$(kubens --current)"
     if [[ "$current_namespace" == "default" ]]; then
