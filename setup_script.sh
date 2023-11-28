@@ -1,6 +1,5 @@
 #!/bin/zsh
 
-WSL=false
 
 # Determine which OS we're running on
 if [[ "$OSTYPE" == "linux-gnu"* ]]; then
@@ -9,6 +8,8 @@ if [[ "$OSTYPE" == "linux-gnu"* ]]; then
     if wsl.exe --version > /dev/null 2>&1; then
         echo "WSL detected"
         WSL=true
+    else
+        WSL=false
     fi
 elif [[ "$OSTYPE" == "darwin"* ]]; then
     echo "Mac OSX detected"
@@ -21,15 +22,11 @@ fi
 
 
 # ---
-
-
 # Make .config directory if it doesn't exist
 [[ -d ~/.config ]] || mkdir ~/.config
 
 
 # --- symlinks
-
-
 # Starship config
 ln -svf "$(pwd)"/.config/starship.toml "$HOME"/.config/
 
@@ -38,7 +35,8 @@ ln -svf "$(pwd)"/.config/aliases.zsh "$HOME"/.config/
 ln -svf "$(pwd)"/.config/functions.zsh "$HOME"/.config/
 
 # Neovim config
-#ln -svf "$(pwd)"/.config/nvim "$HOME"/.config/
+# Clone custom kickstart.nvim fork
+git clone https://github.com/irohn/kickstart.nvim.git ~/.config/nvim
 
 # Alacritty config
 if [ $OS = "linux" ]; then
