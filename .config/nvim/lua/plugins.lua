@@ -50,7 +50,8 @@ require("lazy").setup({
                     timeout = 500,
                 },
                 filters = {
-                    dotfiles = true,
+                    dotfiles = false,
+                    custom = { '^.git$' }
                 },
 
             })
