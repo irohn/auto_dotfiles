@@ -19,4 +19,6 @@ alias kn='kubens'
 alias fl='flux logs -A'
 alias fra='flux reconcile kustomization flux-system --with-source'
 
+alias weather='curl wttr.in'
+
 bindkey -s '^r' 'history | fzf^M'

@@ -35,7 +35,10 @@ ln -svf "$(pwd)"/.config/aliases.zsh "$HOME"/.config
 ln -svf "$(pwd)"/.config/functions.zsh "$HOME"/.config
 
 # Neovim config
-ln -svf "$(pwd)/.config/nvim" "$HOME/.config"
+#ln -svf "$(pwd)/.config/nvim" "$HOME/.config" # OLD CONFIG
+git clone https://github.com/irohn/kickstart.nvim.git "${XDG_CONFIG_HOME:-$HOME/.config}"/nvim
+nvim --headless "+Lazy! sync" +qa
+
 
 # Alacritty config
 if [ $OS = "linux" ]; then
