@@ -28,14 +28,14 @@ fi
 
 # --- symlinks
 # Starship config
-ln -svf "$(pwd)"/.config/starship.toml "$HOME"/.config/
+ln -svf "$(pwd)"/.config/starship.toml "$HOME"/.config
 
 # Aliases and functions
-ln -svf "$(pwd)"/.config/aliases.zsh "$HOME"/.config/
-ln -svf "$(pwd)"/.config/functions.zsh "$HOME"/.config/
+ln -svf "$(pwd)"/.config/aliases.zsh "$HOME"/.config
+ln -svf "$(pwd)"/.config/functions.zsh "$HOME"/.config
 
 # Neovim config
-ln -svf "$(pwd)"/.config/nvim "$HOME"/.config/
+ln -svf "$(pwd)/.config/nvim" "$HOME/.config"
 
 # Alacritty config
 if [ $OS = "linux" ]; then
@@ -48,7 +48,7 @@ if [ $OS = "linux" ]; then
         echo "populating alacritty.yml..."
         echo "import:\n  - $windows_path/default.yml\n  - $windows_path/windows.yml" | sed 's|/mnt/c|C:|g' > "$windows_path/alacritty.yml"
     else
-        ln -svf "$(pwd)"/.config/alacritty "$HOME"/.config/
+        ln -svf "$(pwd)"/.config/alacritty "$HOME"/.config
     fi
 elif [ $OS = "mac" ]; then
     echo "MacOS detected, copying files manually"
@@ -60,9 +60,9 @@ else
 fi
 
 # symlinks for tmux config and plugins
-ln -svf "$(pwd)"/.config/tmux "$HOME"/.config/
-ln -svf "$(pwd)"/.tmux "$HOME"/
+ln -svf "$(pwd)"/.config/tmux "$HOME"/.config
+ln -svf "$(pwd)"/.tmux "$HOME"
 
 # symlinks for home config files
-ln -svf "$(pwd)"/.zshrc "$HOME"/
-ln -svf "$(pwd)"/.hushlogin "$HOME"/
+ln -svf "$(pwd)"/.zshrc "$HOME"
+ln -svf "$(pwd)"/.hushlogin "$HOME"
