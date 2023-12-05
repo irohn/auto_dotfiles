@@ -35,8 +35,7 @@ ln -svf "$(pwd)"/.config/aliases.zsh "$HOME"/.config/
 ln -svf "$(pwd)"/.config/functions.zsh "$HOME"/.config/
 
 # Neovim config
-# Clone custom kickstart.nvim fork
-git clone https://github.com/irohn/kickstart.nvim.git ~/.config/nvim
+ln -svf "$(pwd)"/.config/nvim "$HOME"/.config/
 
 # Alacritty config
 if [ $OS = "linux" ]; then
