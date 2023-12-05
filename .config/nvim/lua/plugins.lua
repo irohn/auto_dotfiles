@@ -40,7 +40,7 @@ require("lazy").setup({
             "nvim-tree/nvim-web-devicons",
         },
         keys = {
-            { "<leader>e", ":NvimTreeToggle<CR>", desc = "Toggle tree" },
+            { "<leader>e", ":NvimTreeToggle<CR>", desc = "Toggle File Tree" },
         },
         config = function()
             require("nvim-tree").setup({
@@ -55,7 +55,16 @@ require("lazy").setup({
                 },
 
             })
-        end
+        end,
+    },
+    {
+        "folke/which-key.nvim",
+        event = "VeryLazy",
+        init = function()
+            vim.o.timeout = true
+            vim.o.timeoutlen = 300
+        end,
+        opts = {}
     },
 })
 
