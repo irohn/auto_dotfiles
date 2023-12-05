@@ -44,9 +44,15 @@ require("lazy").setup({
         },
         config = function()
             require("nvim-tree").setup({
+                git = {
+                    enable = true,
+                    ignore = false,
+                    timeout = 500,
+                },
                 filters = {
                     dotfiles = true,
                 },
+
             })
         end
     },
