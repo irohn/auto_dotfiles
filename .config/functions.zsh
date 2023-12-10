@@ -170,10 +170,11 @@ function kpf() {
 }
 
 function sf() {
-    username=${1:-$(printf "`users` green" | tr " " "\n" | fzf)}
-    host_address=${2:-$(tailscale status | awk '/ 48-b0-2d/ {print $2}' | fzf)}
+    username=${1:-$(users | tr " " "\n" | uniq | fzf --print-query --header="Select or type a username:" | tr -d '\n' | sed '/^$/d')}
+    host_address=${2:-$(tailscale status | awk '/ 48-b0-2d/ {print $2}' | fzf --print-query --header="Select or type a hostname / IP:" | tr -d '\n' | sed '/^$/d')}
     dev_dir_name="/tmp/`whoami`/`basename \"$PWD\"`"
     rsync -av -e "ssh -i ~/.ssh/greenboard.uu -F /dev/null" --rsync-path="mkdir -p $dev_dir_name && rsync" --exclude='.git' --exclude='.github' \
         `pwd`/ $username@$host_address:$dev_dir_name
     echo "Files synced into $dev_dir_name"
 }
+
