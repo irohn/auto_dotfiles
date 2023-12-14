@@ -44,7 +44,7 @@ show_always = true
 # ---
 
 [kubernetes]
-format = '[$symbol$context \[$namespace\]](bold #b451e8) '
+format = '[$symbol$context](bold #b451e8) '
 symbol = " "
 disabled = false
 
@@ -68,6 +68,7 @@ read_only = " "
 
 [docker_context]
 symbol = " "
+disabled = true
 
 [elixir]
 symbol = " "
