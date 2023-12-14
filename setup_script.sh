@@ -35,9 +35,7 @@ ln -svf "$(pwd)"/.config/aliases.zsh "$HOME"/.config
 ln -svf "$(pwd)"/.config/functions.zsh "$HOME"/.config
 
 # Neovim config
-git clone https://github.com/irohn/kickstart.nvim.git "${XDG_CONFIG_HOME:-$HOME/.config}"/nvim
-nvim --headless "+Lazy! sync" +qa
-
+git clone https://github.com/irohn/nvim.git "${XDG_CONFIG_HOME:-$HOME/.config}"/nvim
 
 # Alacritty config
 echo "[Alacritty] Setting up..."
