@@ -1,7 +1,0 @@
-window:
-  decorations: none
-
-shell:
-  program: $SHELL
-  args:
-    - "tmux attach || tmux"

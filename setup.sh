@@ -1,32 +1,24 @@
-#!/bin/zsh
+#!/bin/sh
 
+USER=$(whoami)
+KERNEL_NAME=$(uname -s | tr '[:upper:]' '[:lower:]')
 
-# Determine which OS we're running on
-if [[ "$OSTYPE" == "linux-gnu"* ]]; then
-    echo "[OS] Linux detected"
-    OS="linux"
-    if wsl.exe --version > /dev/null 2>&1; then
-        echo "[OS] WSL detected"
-        WSL=true
-    else
-        WSL=false
-    fi
-elif [[ "$OSTYPE" == "darwin"* ]]; then
-    echo "[OS] MacOS detected"
-    OS="mac"
+printf "Running as user: %s\n" "$USER"
+printf "Kernel name: %s\n" "$KERNEL_NAME"
+
+printf "Checking if XDG_CONFIG_HOME is set...\n"
+if [ -z "$XDG_CONFIG_HOME" ]; then
+    printf "XDG_CONFIG_HOME is not set, setting to default value...\n"
+    export XDG_CONFIG_HOME="$HOME/.config"
 else
-    echo "[OS] Operating system not supported"
-    OS="unknown"
-    exit 1
+    printf "XDG_CONFIG_HOME is set to %s\n" "$XDG_CONFIG_HOME"
 fi
 
+exit 0
 
-# ---
 # Make .config directory if it doesn't exist
 [[ -d ~/.config ]] || mkdir ~/.config
 
-
-# --- symlinks
 # Starship config
 ln -svf "$(pwd)"/.config/starship.toml "$HOME"/.config
 

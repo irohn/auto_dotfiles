@@ -1,4 +1,5 @@
-#!/bin/zsh
+# ~/.config/aliases.sh
+
 alias i='printf "hostname: $(hostname)\nuser: $(whoami)\nhome: $HOME\nshell:$SHELL\n"'
 
 alias sshj='ssh -J green@localhost:2222'

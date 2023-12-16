@@ -1,4 +1,4 @@
-#!/bin/zsh
+# ~/.config/functions.sh
 
 kubectl_bin_path="$(which kubectl)"
 
