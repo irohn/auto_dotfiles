@@ -20,8 +20,8 @@ style = "bold bright-black"
 format = "[$time]($style)"
 
 [character]
-success_symbol = "╰╴[](bold white)"
-error_symbol = "╰╴[](bold red dimmed)"
+success_symbol = "╰╴[\\$](bold white)"
+error_symbol = "╰╴[\\$](bold red dimmed)"
 
 [line_break]
 disabled = false
