@@ -18,9 +18,9 @@ printf "%s %s XDG_CONFIG_HOME is set to %s\n" "`prefix_ok`" "`task_title general
 if grep -q "/zsh" /etc/shells &> /dev/null; then ZSH_INSTALLED=true; else ZSH_INSTALLED=false; fi
 if grep -q "/bash" /etc/shells &> /dev/null; then BASH_INSTALLED=true; else BASH_INSTALLED=false; fi
 if [ $ZSH_INSTALLED = false ] && [ $BASH_INSTALLED = false ]; then
-    printf "%s %s Zsh + Oh-My-Zsh (Recommended) %s\n" "`prefix_err`" "`task_title shell`" "`hyperlink https://github.com/ohmyzsh/ohmyzsh/wiki/Installing-ZSH`"
-    printf "%s %s Bash %s\n" "`prefix_err`" "`task_title shell`" "`hyperlink https://www.gnu.org/software/bash/manual/html_node/Installing-Bash.html`"
-    printf "%s %s Couldn't find zsh nor bash plaease install atleast one of them\n" "`prefix_err`" "`task_title shell`"
+    printf "%s %s Couldn't find zsh nor bash plaease install at least one of them\n" "`prefix_err`" "`task_title shell`"
+    printf "%s %s Zsh + Oh-My-Zsh (Recommended) %s\n" "`prefix_warn`" "`task_title shell`" "`hyperlink https://github.com/ohmyzsh/ohmyzsh/wiki/Installing-ZSH`"
+    printf "%s %s Bash %s\n" "`prefix_warn`" "`task_title shell`" "`hyperlink https://www.gnu.org/software/bash/manual/html_node/Installing-Bash.html`"
     exit 1
 else
     if $ZSH_INSTALLED; then printf "%s %s Zsh is installed\n" "`prefix_ok`" "`task_title shell`"; fi
@@ -51,14 +51,34 @@ fi
 
 # tmux config
 if command -v tmux &> /dev/null; then
-    ln -svf "$SCRIPT_DIR"/.config/tmux/tmux.conf "$XDG_CONFIG_HOME/tmux" > $SCRIPT_DIR/temp-log.local 2>&1
+    [[ -d $XDG_CONFIG_HOME/tmux ]] || mkdir $XDG_CONFIG_HOME/tmux
+    ln -svf "$SCRIPT_DIR"/.config/tmux/tmux.conf "$XDG_CONFIG_HOME/tmux/tmux.conf" > $SCRIPT_DIR/temp-log.local 2>&1
     if [ $? -eq 0 ]; then
         printf "%s %s Tmux config linked %s\n" "`prefix_ok`" "`task_title tmux`" "`cat $SCRIPT_DIR/temp-log.local | tr '\n' ' '`"
-    else
+
+      else
         printf "%s %s Tmux config failed to link %s\n" "`prefix_err`" "`task_title tmux`" "`cat $SCRIPT_DIR/temp-log.local | tr '\n' ' '`"
     fi
 else
     printf "%s %s Tmux is not installed, %s\n" "`prefix_skip`" "`task_title tmux`" "`hyperlink https://github.com/tmux/tmux/wiki/Installing`"
+fi
+
+# check if git is installed
+git --version > /dev/null 2>&1
+if [ $? -ne 0 ]; then
+    printf "%s %s Git not found\n" "`prefix_warn`" "`task_title tmux`"
+    printf "%s %s TPM did not install\n" "`prefix_skip`" "`task_title tmux`"
+else
+    if [ -d $XDG_CONFIG_HOME/tmux/plugins ]; then
+        printf "%s %s TPM already installed\n" "`prefix_ok`" "`task_title tmux`"
+    else
+        git clone "https://github.com/tmux-plugins/tpm" "$XDG_CONFIG_HOME/tmux/plugins/tpm" > /dev/null 2>&1
+        if [ $? -ne 0 ]; then
+            printf "%s %s TPM failed to install\n" "`prefix_err`" "`task_title tmux`"
+        else
+            printf "%s %s TPM installed successfully\n" "`prefix_ok`" "`task_title tmux`"
+        fi
+    fi
 fi
 
 # nvim config
