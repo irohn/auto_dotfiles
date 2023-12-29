@@ -9,12 +9,12 @@ while [[ $# -gt 0 ]]; do
       printf "\n"
       printf "Available options are:\n"
       printf "    -h, --help    Show this help message\n"
-      printf "    --skip-shell    Skip shell related tasks\n"
+      printf "    --skip-zsh    Skip zsh related tasks\n"
       printf "    --skip-vault  Skip secret related tasks\n"
       printf "\n"
       exit 0
       ;;
-    --skip-shell)
+    --skip-zsh)
       SKIP_ZSH=true
       shift
       ;;
@@ -390,12 +390,13 @@ done
 
 ##################################################
 #                      SHELL                     #
-TASK_NAME="shell"
+TASK_NAME="zsh"
 
 if [[ "$SKIP_ZSH" == "true" ]]; then
-    pprint_skip "Skipping shell related tasks"
+    pprint_skip "Skipping zsh related tasks"
 else
     source "$DOTFILES_REPO_PATH/bin/zsh_install.sh" > $TMP_LOG_FILE 2>&1
     if [[ "$?" != "0" ]]; then pprint_error "Failed to install zsh"; pprint_error_log "$(cat $TMP_LOG_FILE)"; exit 1; fi
+    pprint_check "ZSH installed"
 fi
 ##################################################
