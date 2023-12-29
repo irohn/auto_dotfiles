@@ -9,9 +9,14 @@ while [[ $# -gt 0 ]]; do
       printf "\n"
       printf "Available options are:\n"
       printf "    -h, --help    Show this help message\n"
+      printf "    --skip-shell    Skip shell related tasks\n"
       printf "    --skip-vault  Skip secret related tasks\n"
       printf "\n"
       exit 0
+      ;;
+    --skip-shell)
+      SKIP_ZSH=true
+      shift
       ;;
     --skip-vault)
       SKIP_VAULT=true
@@ -362,7 +367,6 @@ else
     fi
 fi
 
-# Link dotfiles/bin files to $HOME/.local/bin
 if ! [[ -d "$HOME/.local/bin" ]]; then
     pprint_warning "Directory $HOME/.local/bin not found"
     pprint "Creating directory $HOME/.local/bin..."
@@ -373,9 +377,25 @@ else
     pprint_check "Directory $HOME/.local/bin found"
 fi
 
-pprint "Linking script files to $HOME/.local/bin..."
 for file in "$DOTFILES_REPO_PATH/bin/"*; do
+    # check if link already exists
+    if [[ -L "$HOME/.local/bin/$(basename "$file")" ]]; then pprint_check "Link $HOME/.local/bin/$(basename "$file") already exists"; continue; fi
+    pprint_bullet "Linking $file <-> $HOME/.local/bin"
     ln -sf "$file" "$HOME/.local/bin/$(basename "$file")" > $TMP_LOG_FILE 2>&1
     if [[ "$?" != "0" ]]; then pprint_error "Failed to link $file to $HOME/.local/bin/$(basename "$file")"; pprint_error_log "$(cat $TMP_LOG_FILE)"; exit 1; fi
 done
+##################################################
+
+
+
+##################################################
+#                      SHELL                     #
+TASK_NAME="shell"
+
+if [[ "$SKIP_ZSH" == "true" ]]; then
+    pprint_skip "Skipping shell related tasks"
+else
+    source "$DOTFILES_REPO_PATH/bin/zsh_install.sh" > $TMP_LOG_FILE 2>&1
+    if [[ "$?" != "0" ]]; then pprint_error "Failed to install zsh"; pprint_error_log "$(cat $TMP_LOG_FILE)"; exit 1; fi
+fi
 ##################################################
