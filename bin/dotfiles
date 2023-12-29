@@ -185,6 +185,17 @@ trap "cleanup" EXIT SIGINT SIGTERM SIGKILL SIGQUIT
 #                 PREREQUISITES                  #
 TASK_NAME="prerequisites"
 
+# Check if $HOME/.local/bin is in PATH
+if [[ ":$PATH:" == *":$HOME/.local/bin:"* ]]
+then
+    pprint_check "${green}$HOME/.local/bin${no_color} is in PATH"
+else
+    pprint_warning "${yellow}$HOME/.local/bin${no_color} is not in PATH"
+    pprint "Adding $HOME/.local/bin to PATH in current scope"
+    export PATH="$HOME/.local/bin:$PATH"
+    pprint_bullet "It is recommended to add $HOME/.local/bin to PATH in your shell configuration"
+fi
+
 # Check for homebrew on MACOS
 if [ "$OPERATING_SYSTEM" == *"darwin"* ]
 then
