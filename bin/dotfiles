@@ -1,0 +1,332 @@
+#!/bin/bash
+
+##################################################
+#                   ARGUMENTS                    #
+while [[ $# -gt 0 ]]; do
+  case $1 in
+    -h|--help)
+      printf "Usage: $0 [OPTION]\n"
+      printf "\n"
+      printf "Available options are:\n"
+      printf "    -h, --help    Show this help message\n"
+      printf "    --skip-vault  Skip secret related tasks\n"
+      printf "\n"
+      exit 0
+      ;;
+    --skip-vault)
+      SKIP_VAULT=true
+      shift
+      ;;
+    *)
+      printf "Unknown option $1\n$0 --help for usage\n"
+      exit 1
+      ;;
+  esac
+done
+##################################################
+
+
+
+##################################################
+#                TEXT FORMATTING                 #
+TASK_NAME="preparing"
+
+#                     COLORS                     #
+no_color='\033[0m'         # text reset
+
+# regular colors
+black='\033[0;30m'        # black
+red='\033[0;31m'          # red
+green='\033[0;32m'        # green
+yellow='\033[0;33m'       # yellow
+blue='\033[0;34m'         # blue
+purple='\033[0;35m'       # purple
+cyan='\033[0;36m'         # cyan
+white='\033[0;37m'        # white
+
+# bold
+bblack='\033[1;30m'       # black
+bred='\033[1;31m'         # red
+bgreen='\033[1;32m'       # green
+byellow='\033[1;33m'      # yellow
+bblue='\033[1;34m'        # blue
+bpurple='\033[1;35m'      # purple
+bcyan='\033[1;36m'        # cyan
+bwhite='\033[1;37m'       # white
+
+# underline
+ublack='\033[4;30m'       # black
+ured='\033[4;31m'         # red
+ugreen='\033[4;32m'       # green
+uyellow='\033[4;33m'      # yellow
+ublue='\033[4;34m'        # blue
+upurple='\033[4;35m'      # purple
+ucyan='\033[4;36m'        # cyan
+uwhite='\033[4;37m'       # white
+
+# background
+on_black='\033[40m'       # black
+on_red='\033[41m'         # red
+on_green='\033[42m'       # green
+on_yellow='\033[43m'      # yellow
+on_blue='\033[44m'        # blue
+on_purple='\033[45m'      # purple
+on_cyan='\033[46m'        # cyan
+on_white='\033[47m'       # white
+
+# high intensity
+iblack='\033[0;90m'       # black
+ired='\033[0;91m'         # red
+igreen='\033[0;92m'       # green
+iyellow='\033[0;93m'      # yellow
+iblue='\033[0;94m'        # blue
+ipurple='\033[0;95m'      # purple
+icyan='\033[0;96m'        # cyan
+iwhite='\033[0;97m'       # white
+
+# bold high intensity
+biblack='\033[1;90m'      # black
+bired='\033[1;91m'        # red
+bigreen='\033[1;92m'      # green
+biyellow='\033[1;93m'     # yellow
+biblue='\033[1;94m'       # blue
+bipurple='\033[1;95m'     # purple
+bicyan='\033[1;96m'       # cyan
+biwhite='\033[1;97m'      # white
+
+# high intensity backgrounds
+on_iblack='\033[0;100m'   # black
+on_ired='\033[0;101m'     # red
+on_igreen='\033[0;102m'   # green
+on_iyellow='\033[0;103m'  # yellow
+on_iblue='\033[0;104m'    # blue
+on_ipurple='\033[0;105m'  # purple
+on_icyan='\033[0;106m'    # cyan
+on_iwhite='\033[0;107m'   # white
+
+#                    SYMBOLS                     #
+check_mark="\xe2\x9c\x94"
+x_mark="\xe2\x9c\x96"
+warning="${byellow}!${no_color}"
+right_arrow="\xe2\x96\xb6"
+down_arrow="\xe2\x96\xbc"
+bullet="\xe2\x80\xa2"
+
+
+#                   FUNCTIONS                    #
+print_time() { printf "${white}[$(date +%H:%M:%S)]${no_color}"; }
+prefix_info() { printf "${right_arrow}"; }
+prefix_bullet() { printf "${white}${bullet}${no_color}"; }
+prefix_check() { printf "${green}${check_mark}${no_color}"; }
+prefix_error() { printf "${red}${x_mark}${no_color}"; }
+prefix_warning() { printf "${yellow}${warning}${no_color}"; }
+prefix_error_log() { printf "${red}${down_arrow}${no_color}"; }
+task_name() { printf "[${iblue}${TASK_NAME}${no_color}]"; }
+pprint() { printf "%s %s ${@}\n" "$(prefix_info)" "$(task_name)"; } # prretty print
+pprint_bullet() { printf "%s %s ${@}\n" "$(prefix_bullet)" "$(task_name)"; } # prretty print
+pprint_check() { printf "%s %s ${@}\n" "$(prefix_check)" "$(task_name)"; } # prretty print
+pprint_error() { printf "%s %s ${@}\n" "$(prefix_error)" "$(task_name)"; } # prretty print
+pprint_error_log() { printf "%s %s ${@}\n" "$(prefix_error_log)" "$(task_name)"; } # prretty print
+pprint_warning() { printf "%s %s ${@}\n" "$(prefix_warning)" "$(task_name)"; } # prretty print
+pprint_skip() { printf "%s %s ${icyan}skipping...${no_color}\n" "$(prefix_info)" "$(task_name)"; } # prretty print
+print_cleanup() { printf "%s [${iblack}cleanup${no_color}] ${@}\n" "$(prefix_bullet)"; } # prretty print
+##################################################
+
+
+
+##################################################
+#                 INITIALIZATION                 #
+TASK_NAME="init"
+
+START_TIME=$(date +%s)
+OPERATING_SYSTEM=$(uname -o | tr '[:upper:]' '[:lower:]' || echo "unknown")
+LINUX_DISTRO=$(awk -F'=' '/^ID=/ { gsub("\"","",$2); print tolower($2) }' /etc/*-release 2> /dev/null || echo "unknown")
+RUNNING_USER=$(whoami)
+SSH_DIR="$HOME/.ssh"
+LC_ALL="C.UTF-8" # locale for ansible
+HCP_CREDS_PATH="$HOME/.secrets/dotfiles_vault_creds"
+TMP_LOG_FILE="/tmp/dotfiles.log"
+
+pprint "Operating System: $OPERATING_SYSTEM"
+pprint "Linux distribution: $LINUX_DISTRO"
+if [[ "$RUNNING_USER" == "root" ]]
+then
+    pprint_warning "Running as ${red}$RUNNING_USER${no_color} is not recommended!"
+else
+    pprint "Running as user ${green}$RUNNING_USER${no_color}"
+fi
+##################################################
+
+
+
+##################################################
+#                SIGNAL HANDLERS                 #
+TASK_NAME="handlers"
+cleanup() { 
+    END_TIME=$(date +%s)
+    ELAPSED_TIME=$(($END_TIME - $START_TIME))
+    ELAPESED_TIME_FORMATTED=$(printf '%dh:%dm:%ds\n' $(($ELAPSED_TIME/3600)) $(($ELAPSED_TIME%3600/60)) $(($ELAPSED_TIME%60)))
+    print_cleanup "Cleaning up..."
+    rm -f "$TMP_LOG_FILE"
+    print_cleanup "Elapsed time: ${purple}${ELAPESED_TIME_FORMATTED}${no_color}"
+    print_cleanup "Exiting"
+}
+pprint "Registering signal handlers"
+trap "cleanup" EXIT SIGINT SIGTERM SIGKILL SIGQUIT
+##################################################
+
+
+
+##################################################
+#                 PREREQUISITES                  #
+TASK_NAME="prerequisites"
+
+# Check for homebrew on MACOS
+if [ "$OPERATING_SYSTEM" == *"darwin"* ]
+then
+    if ! command -v brew &> /dev/null
+    then
+        pprint_warning "${yellow}brew${no_color} not found"
+        pprint "Installing brew..."
+        /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" > $TMP_LOG_FILE 2>&1
+        if [[ "$?" != "0" ]]; then pprint_error "Failed to install brew"; pprint_error_log "$(cat $TMP_LOG_FILE)"; pprint_error_log "$(cat $TMP_LOG_FILE)"; exit 1; fi
+    else
+        pprint_check "${green}brew${no_color} found"
+    fi
+fi
+
+# Check jq is installed, if not install it
+if ! command -v jq &> /dev/null
+then
+    pprint_warning "${yellow}jq${no_color} not found"
+    pprint "Installing jq..."
+    if [[ "$OPERATING_SYSTEM" == *"linux"* ]]
+    then
+        if [[ "$LINUX_DISTRO"  == *"ubuntu"* ]] || [[ "$LINUX_DISTRO" == *"debian"* ]]
+        then
+            sudo apt-get -y install jq > $TMP_LOG_FILE 2>&1; if [[ "$?" != "0" ]]; then pprint_error "Failed to install jq"; pprint_error_log "$(cat $TMP_LOG_FILE)"; exit 1; fi
+        elif [[ "$LINUX_DISTRO" == *"arch"* ]]
+        then
+            sudo pacman -S jq --noconfirm > $TMP_LOG_FILE 2>&1; if [[ "$?" != "0" ]]; then pprint_error "Failed to install jq"; pprint_error_log "$(cat $TMP_LOG_FILE)"; exit 1; fi
+        elif [[ "$LINUX_DISTRO" == *"fedora"* ]]
+        then
+            sudo dnf -y install jq > $TMP_LOG_FILE 2>&1; if [[ "$?" != "0" ]]; then pprint_error "Failed to install jq"; pprint_error_log "$(cat $TMP_LOG_FILE)"; exit 1; fi
+        elif [[ "$LINUX_DISTRO" == *"centos"* ]]
+        then
+            sudo yum -y install jq > $TMP_LOG_FILE 2>&1; if [[ "$?" != "0" ]]; then pprint_error "Failed to install jq"; pprint_error_log "$(cat $TMP_LOG_FILE)"; exit 1; fi
+        elif [[ "$LINUX_DISTRO" == *"alpine"* ]]
+        then
+            sudo apk add jq > $TMP_LOG_FILE 2>&1; if [[ "$?" != "0" ]]; then pprint_error "Failed to install jq"; pprint_error_log "$(cat $TMP_LOG_FILE)"; exit 1; fi
+        else
+            pprint "${red}Unknown Linux distribution${no_color}"
+            exit 1
+        fi
+    elif [[ "$OPERATING_SYSTEM" == *"darwin"* ]]
+    then
+        brew install jq > $TMP_LOG_FILE 2>&1; if [[ "$?" != "0" ]]; then pprint_error "Failed to install jq"; pprint_error_log "$(cat $TMP_LOG_FILE)"; exit 1; fi
+    else
+        pprint "${red}Unknown operating system${no_color}"
+        exit 1
+    fi
+    pprint_check "${green}jq${no_color} installed"
+else
+    pprint_check "${green}jq${no_color} found"
+fi
+
+# Check git is installed
+if ! command -v git &> /dev/null
+then
+    pprint_warning "${yellow}git${no_color} not found"
+    pprint "Installing git..."
+    if [[ "$OPERATING_SYSTEM" == *"linux"* ]]
+    then
+        if [[ "$LINUX_DISTRO"  == *"ubuntu"* ]] || [[ "$LINUX_DISTRO" == *"debian"* ]]
+        then
+            sudo apt-get -y install git > $TMP_LOG_FILE 2>&1; if [[ "$?" != "0" ]]; then pprint_error "Failed to install git"; pprint_error_log "$(cat $TMP_LOG_FILE)"; exit 1; fi
+        elif [[ "$LINUX_DISTRO" == *"arch"* ]]
+        then
+            sudo pacman -S git --noconfirm > $TMP_LOG_FILE 2>&1; if [[ "$?" != "0" ]]; then pprint_error "Failed to install git"; pprint_error_log "$(cat $TMP_LOG_FILE)"; exit 1; fi
+        elif [[ "$LINUX_DISTRO" == *"fedora"* ]]
+        then
+            sudo dnf -y install git > $TMP_LOG_FILE 2>&1; if [[ "$?" != "0" ]]; then pprint_error "Failed to install git"; pprint_error_log "$(cat $TMP_LOG_FILE)"; exit 1; fi
+        elif [[ "$LINUX_DISTRO" == *"centos"* ]]
+        then
+            sudo yum -y install git > $TMP_LOG_FILE 2>&1; if [[ "$?" != "0" ]]; then pprint_error "Failed to install git"; pprint_error_log "$(cat $TMP_LOG_FILE)"; exit 1; fi
+        elif [[ "$LINUX_DISTRO" == *"alpine"* ]]
+        then
+            sudo apk add git > $TMP_LOG_FILE 2>&1; if [[ "$?" != "0" ]]; then pprint_error "Failed to install git"; pprint_error_log "$(cat $TMP_LOG_FILE)"; exit 1; fi
+        else
+            pprint "${red}Unknown Linux distribution${no_color}"
+            exit 1
+        fi
+    elif [[ "$OPERATING_SYSTEM" == *"darwin"* ]]
+    then
+        brew install git > $TMP_LOG_FILE 2>&1; if [[ "$?" != "0" ]]; then pprint_error "Failed to install git"; pprint_error_log "$(cat $TMP_LOG_FILE)"; exit 1; fi
+    else
+        pprint "${red}Unknown operating system${no_color}"
+    fi
+    pprint_check "${green}git${no_color} installed"
+else
+    pprint_check "${green}git${no_color} found"
+fi
+##################################################
+
+
+
+##################################################
+#                      VAULT                     #
+TASK_NAME="vault"
+
+if [[ "$SKIP_VAULT" == "true" ]]; then
+    pprint_skip "Skipping vault related tasks"
+else
+    # Check if HCP Vault Secrets CLI is installed
+    if ! command -v vlt &> /dev/null; then
+        pprint_error "${yellow}vlt${no_color} HCP Vault Secrets CLI not found"
+        pprint_error_log "You can find it on"
+        pprint_bullet "${ublue}https://developer.hashicorp.com/vault/tutorials/hcp-vault-secrets-get-started/hcp-vault-secrets-install-cli${no_color}"
+        exit 1
+    else
+        pprint_check "${green}vlt${no_color} (HCP Vault Secrets CLI) found"
+    fi
+
+    # Check for HCP secret files in $HOME/.secrets/hcp_client_creds]
+    if ! [[ -f "$HCP_CREDS_PATH" ]]
+    then
+        pprint_error "Credentials file $HCP_CREDS_PATH not found"
+        pprint_error_log "To retrieve your HCP client credentials, login to your vault and run the following command with your arguments:"
+        pprint_error_log "${iyellow}vlt secrets get -o \"\$ORGANIZATION_NAME\" -p \"\$PROJECT_ID\" -a \"\$APP_NAME\" --plaintext \"\$SECRET_NAME\" > \"$HCP_CREDS_PATH\"${no_color}"
+        exit 1
+    else
+        # Check correct permissions (660) for HCP secret files
+        if [[ "$(stat -c "%a" "$HCP_CREDS_PATH")" != "660" ]]
+        then
+            pprint_error "HCP client credentials file has incorrect permissions"
+            pprint_error_log "Please run ${yellow}chmod 660 $HCP_CREDS_PATH${no_color}"
+            exit 1
+        fi
+        pprint_check "Credentials file is valid"
+    fi
+
+    # Set environment variables from HCP secret files, using export so they are available to child processes
+    export HCP_CLIENT_ID=$(cat "$HCP_CREDS_PATH" | jq -r '.client_id'); if [[ -z "$HCP_CLIENT_ID" ]]; then pprint_error "HCP client ID is empty"; pprint_error_log "$(cat $TMP_LOG_FILE)"; exit 1; fi
+    export HCP_CLIENT_SECRET=$(cat "$HCP_CREDS_PATH" | jq -r '.client_secret'); if [[ -z "$HCP_CLIENT_SECRET" ]]; then pprint_error "HCP client secret is empty"; pprint_error_log "$(cat $TMP_LOG_FILE)"; exit 1; fi
+    export HCP_ORGANIZATION=$(cat "$HCP_CREDS_PATH" | jq -r '.organization'); if [[ -z "$HCP_ORGANIZATION" ]]; then pprint_error "HCP organization is empty"; pprint_error_log "$(cat $TMP_LOG_FILE)"; exit 1; fi
+    export HCP_PROJECT=$(cat "$HCP_CREDS_PATH" | jq -r '.project'); if [[ -z "$HCP_PROJECT" ]]; then pprint_error "HCP project is empty"; pprint_error_log "$(cat $TMP_LOG_FILE)"; exit 1; fi
+    export HCP_APP_NAME=$(cat "$HCP_CREDS_PATH" | jq -r '.app_name'); if [[ -z "$HCP_APP_NAME" ]]; then pprint_error "HCP app name is empty"; pprint_error_log "$(cat $TMP_LOG_FILE)"; exit 1; fi
+
+    # Login to vault
+    vlt login > /dev/null
+    if [[ "$?" != "0" ]]
+    then
+        pprint_error "Failed to login to vault"
+        exit 1
+    else
+        pprint_check "Logged in to vault"
+    fi
+
+    function get_secret_from_vault() {
+        vlt secrets get --organization "$HCP_ORGANIZATION" --project "$HCP_PROJECT" --app-name "$HCP_APP_NAME" --plaintext "$1"
+    }
+fi
+##################################################
