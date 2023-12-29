@@ -400,3 +400,19 @@ else
     pprint_check "ZSH installed"
 fi
 ##################################################
+
+
+
+##################################################
+#                    STARSHIP                    #
+TASK_NAME="starship"
+
+if [[ "$SKIP_ZSH" == "true" ]]; then
+    pprint_skip "Skipping zsh related tasks"
+else
+    source "$DOTFILES_REPO_PATH/bin/starship_install.sh" > $TMP_LOG_FILE 2>&1
+    if [[ "$?" != "0" ]]; then pprint_error "Failed to install starship"; pprint_error_log "$(cat $TMP_LOG_FILE)"; exit 1; fi
+    pprint_check "Starship installed"
+fi
+
+##################################################
