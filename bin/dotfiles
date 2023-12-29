@@ -389,7 +389,7 @@ done
 
 
 ##################################################
-#                      SHELL                     #
+#                      ZSH                       #
 TASK_NAME="zsh"
 
 if [[ "$SKIP_ZSH" == "true" ]]; then
