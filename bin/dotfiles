@@ -7,13 +7,13 @@
 while [ $# -gt 0 ]; do
     case $1 in
         -h|--help)
-            /bin/printf "Usage: $0 [OPTION]\n"
-            /bin/printf "\n"
-            /bin/printf "Available options are:\n"
-            /bin/printf "    -h, --help    Show this help message\n"
-            /bin/printf "    --skip-auth   Skip vault authentication related tasks\n"
-            /bin/printf "    --debug       Enable debug mode\n"
-            /bin/printf "\n"
+            printf "Usage: $0 [OPTION]\n"
+            printf "\n"
+            printf "Available options are:\n"
+            printf "    -h, --help    Show this help message\n"
+            printf "    --skip-auth   Skip vault authentication related tasks\n"
+            printf "    --debug       Enable debug mode\n"
+            printf "\n"
             exit 0
             ;;
         --skip-auth)
@@ -25,7 +25,7 @@ while [ $# -gt 0 ]; do
             shift
             ;;
         *)
-            /bin/printf "Unknown option $1\n$0 --help for usage\n"
+            printf "Unknown option $1\n$0 --help for usage\n"
             exit 1
             ;;
     esac
@@ -64,15 +64,15 @@ right_arrow="➜"
 key_icon="🗝"
 
 #                   FUNCTIONS                    #
-task_name() { /bin/printf "${gray}[${TASK_NAME}]${rf}"; }
-pprint() { /bin/printf "${bold}${white}${default_symbol}${rf} %s ${@}\n" "$(task_name)"; } # prretty print
-pprint_check() { /bin/printf "${bold}${green}${check_mark}${rf} %s ${@}\n" "$(task_name)"; } # prretty print check
-pprint_error() { /bin/printf "${bold}${red}${x_mark}${rf} %s ${@}\n" "$(task_name)"; } # prretty print x
-pprint_warning() { /bin/printf "${bold}${yellow}${warning}${rf} %s ${@}\n" "$(task_name)"; } # prretty print warning
-pprint_error_info() { /bin/printf "${bold}${red}${default_symbol}${rf} %s ${@}\n" "$(task_name)"; } # prretty print error log or info
-pprint_skip() { /bin/printf "${bold}${blue}${right_arrow}${rf} %s ${@}\n" "$(task_name)"; } # prretty print skip
+task_name() { printf "${gray}[${TASK_NAME}]${rf}"; }
+pprint() { printf "${bold}${white}${default_symbol}${rf} %s ${@}\n" "$(task_name)"; } # prretty print
+pprint_check() { printf "${bold}${green}${check_mark}${rf} %s ${@}\n" "$(task_name)"; } # prretty print check
+pprint_error() { printf "${bold}${red}${x_mark}${rf} %s ${@}\n" "$(task_name)"; } # prretty print x
+pprint_warning() { printf "${bold}${yellow}${warning}${rf} %s ${@}\n" "$(task_name)"; } # prretty print warning
+pprint_error_info() { printf "${bold}${red}${default_symbol}${rf} %s ${@}\n" "$(task_name)"; } # prretty print error log or info
+pprint_skip() { printf "${bold}${blue}${right_arrow}${rf} %s ${@}\n" "$(task_name)"; } # prretty print skip
 
-print_icon() { /bin/printf "${1} %s " "$(task_name)"; shift; /bin/printf "${@}\n"; } # print icon
+print_icon() { printf "${1} %s " "$(task_name)"; shift; printf "${@}\n"; } # print icon
 ##################################################
 
 
@@ -149,6 +149,17 @@ case ":$PATH:" in
         ;;
 esac
 
+# Check $XDG_CONFIG_HOME exists
+if [ ! -d "$XDG_CONFIG_HOME" ]; then
+    pprint_warning "Directory $XDG_CONFIG_HOME not found"
+    pprint "Creating directory $XDG_CONFIG_HOME..."
+    mkdir -p "$XDG_CONFIG_HOME" > $TMP_LOG_FILE 2>&1
+    if [ $? -ne 0 ]; then pprint_error "Failed to create directory $XDG_CONFIG_HOME"; pprint_error_info "$(cat $TMP_LOG_FILE)"; exit 1; fi
+    pprint_check "Created directory ${green}$XDG_CONFIG_HOME${rf}"
+else
+    pprint "Directory $XDG_CONFIG_HOME found"
+fi
+
 # function to install with package manager
 install_with_package_manager() {
     case "$OPERATING_SYSTEM" in
@@ -184,6 +195,17 @@ install_with_package_manager() {
             ;;
     esac
 }
+
+# Check curl is installed
+if ! command -v curl > $TMP_LOG_FILE 2>&1
+then
+    pprint_warning "${yellow}curl${rf} not found"
+    pprint "Installing curl..."
+    install_with_package_manager curl
+    pprint_check "${green}curl${rf} installed"
+else
+    pprint_check "${green}curl${rf} found"
+fi
 
 # Check for homebrew on MACOS
 case "$OPERATING_SYSTEM" in
@@ -404,15 +426,22 @@ else
     if [ $? -ne 0 ]; then pprint_error "Failed to install oh-my-zsh"; pprint_error_info "$(cat $TMP_LOG_FILE)"; exit 1; fi
 fi
 
+# Verify $HOME/.local/bin exists
+if [ ! -d "$HOME/.local/bin" ]; then
+    mkdir -p "$HOME/.local/bin" > $TMP_LOG_FILE 2>&1
+    if [ $? -ne 0 ]; then pprint_error "Failed to create directory $HOME/.local/bin"; pprint_error_info "$(cat $TMP_LOG_FILE)"; exit 1; fi
+fi
+
 # Add $HOME/.local/bin to PATH
 if ! grep -q "export PATH=\$HOME/.local/bin:\$PATH" "$HOME"/.zshrc; then
     printf 'export PATH=$HOME/.local/bin:$PATH\n' >> "$HOME"/.zshrc
+    export PATH="$HOME/.local/bin:$PATH"
     pprint_check "Added $HOME/.local/bin to PATH in .zshrc"
 fi
 
 # Check if starship is already installed
 if ! command -v starship > $TMP_LOG_FILE 2>&1; then
-    curl -sS https://starship.rs/install.sh | sh -s -- -y --bin-dir /home/$RUNNING_USER/.local/bin > $TMP_LOG_FILE 2>&1
+    curl -sS https://starship.rs/install.sh | sh -s -- -y --bin-dir $HOME/.local/bin > $TMP_LOG_FILE 2>&1
     if [ $? -ne 0 ]; then pprint_error "Failed to install starship"; pprint_error_info "$(cat $TMP_LOG_FILE)"; exit 1; fi
     # Make sure we eval starship in .zshrc and at the end of the file
     if ! grep -q "starship init zsh" "$HOME/".zshrc; then
@@ -427,4 +456,37 @@ else
     printf 'eval "$(starship init zsh)"\n' >> "$HOME/".zshrc
     pprint_check "Moved starship init to the bottom of .zshrc"
 fi
+
+# Copy starship into XDG_CONFIG_HOME
+    /bin/cp -rf "$DOTFILES_REPO_PATH"/starship/starship.toml "$XDG_CONFIG_HOME"/starship.toml > $TMP_LOG_FILE 2>&1
+    if [ $? -ne 0 ]; then pprint_error "Failed to copy starship.toml"; pprint_error_info "$(cat $TMP_LOG_FILE)"; exit 1; fi
+    pprint_check "Copied starship.toml to $XDG_CONFIG_HOME"
+##################################################
+
+
+
+##################################################
+#                      TMUX                      #
+TASK_NAME="tmux"
+
+# Check if tmux already installed
+if ! command -v tmux > $TMP_LOG_FILE 2>&1
+then
+    pprint_warning "${yellow}tmux${rf} not found"
+    pprint "Installing tmux..."
+    install_with_package_manager tmux
+    pprint_check "${green}tmux${rf} installed"
+else
+    pprint_check "${green}tmux${rf} found"
+fi
+
+# Check if tmux plugin manager already installed
+if [ -d "$XDG_CONFIG_HOME/tmux/plugins/tpm" ]; then
+    pprint "tmux plugin manager already installed"
+else
+    # Install tmux plugin manager
+    git clone https://github.com/tmux-plugins/tpm "$XDG_CONFIG_HOME/tmux/plugins/tpm"
+    if [ $? -ne 0 ]; then pprint_error "Failed to install tmux plugin manager"; pprint_error_info "$(cat $TMP_LOG_FILE)"; exit 1; fi
+fi
+
 ##################################################
