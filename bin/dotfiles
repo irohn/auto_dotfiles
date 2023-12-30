@@ -452,7 +452,7 @@ if [ $? -ne 0 ]; then pprint_error "Failed to copy alias.d"; pprint_error_info "
 pprint_check "Copied alias.d to $XDG_CONFIG_HOME"
 
 # Ensure loading all files in alias.d is present in .zshrc
-if ! grep -q "for file in $XDG_CONFIG_HOME/alias.d/*; do source \$file; done" "$HOME"/.zshrc; then
+if ! grep -q "alias.d" "$HOME"/.zshrc; then
     printf "for file in $XDG_CONFIG_HOME/alias.d/*; do source \$file; done\n" >> "$HOME"/.zshrc
     pprint_check "Added loading all files in alias.d to .zshrc"
 fi
