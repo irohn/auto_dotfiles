@@ -123,11 +123,12 @@ cleanup() {
     FAILED_TASKS=$(echo "$FAILED_TASKS" | sed 's/^://')
     rm -f "$TMP_LOG_FILE"
     rm -rf "$TMP_REPO_PATH"
-    
-    if [ $exit_code -eq 0 ]; then
-        if [ ! -z "$SKIPPED_TASKS" ]; then
-            pprint_skip "Skipped tasks: ${cyan}$(IFS=:; for task in $SKIPPED_TASKS; do printf "$task "; done)${rf}"
-        fi
+   
+    if [ ! -z "$SKIPPED_TASKS" ]; then
+        pprint_skip "Skipped tasks: ${cyan}$(IFS=:; for task in $SKIPPED_TASKS; do printf "$task "; done)${rf}"
+    fi
+
+    if [ -z "$FAILED_TASKS" ]; then
         pprint "Finished successfully took ${purple}$ELAPESED_TIME_FORMATTED${rf}"
     else
         pprint_error "Exit with failed tasks: ${red}$(IFS=:; for task in $FAILED_TASKS; do printf "$task "; done)${rf}"
@@ -416,6 +417,19 @@ fi
 
 # Install zsh plugins
 ZSH_PLUGINS="git zsh-autosuggestions"
+
+# zsh-history-substring-search
+if [ ! -d "$HOME/.oh-my-zsh/custom/plugins/zsh-history-substring-search" ]; then
+    git clone https://github.com/zsh-users/zsh-history-substring-search ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-history-substring-search > $TMP_LOG_FILE 2>&1
+    if [ $? -ne 0 ]; then
+        pprint_error "Failed to clone zsh-history-substring-search"
+        FAILED_TASKS="$FAILED_TASKS:$TASK_NAME"
+    else
+        ZSH_PLUGINS="$ZSH_PLUGINS zsh-history-substring-search"
+    fi
+else
+    ZSH_PLUGINS="$ZSH_PLUGINS zsh-history-substring-search"
+fi
 
 if ! grep -q "plugins=" "$HOME"/.zshrc; then
     printf "plugins=($ZSH_PLUGINS)\n" >> "$HOME"/.zshrc
