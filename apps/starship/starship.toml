@@ -1,195 +1,69 @@
-# Custom formatting
-format = """
-╭╴\
-$all\
-$kubernetes\
-$line_break\
-$character\
-"""
 
-
-# Add empty line between prompts
-add_newline = true
+add_newline = false
+format = "$os$username$hostname$kubernetes$directory$git_branch$git_status"
 
 # ---
 
-
-[time]
-disabled = true
-style = "bold bright-black"
-format = "[$time]($style)"
-
-[character]
-success_symbol = "╰╴[\\$](bold white)"
-error_symbol = "╰╴[\\$](bold red dimmed)"
-
-[line_break]
+[os]
+format = '[$symbol](bold white) '   
 disabled = false
-
-[username]
-style_user = 'white bold'
-style_root = 'red bold'
-format = '[ $user]($style) '
-disabled = false
-show_always = true
-
-# ---
-
-[kubernetes]
-format = '[$symbol$context](blue) '
-disabled = false
-[kubernetes.context_aliases]
-'k3s-(?P<mac>.*).tail.*.ts.net' = '$mac'
-
-[container]
-disabled = true
-
-[aws]
-symbol = "  "
-
-[buf]
-symbol = " "
-
-[c]
-symbol = " "
-
-[conda]
-symbol = " "
-
-[dart]
-symbol = " "
-
-[directory]
-style = 'bold green'
-read_only = " "
-home_symbol = " "
-truncation_length = 3
-truncate_to_repo = true
-format = 'at [$path]($style)[$read_only]($read_only_style) '
-
-[docker_context]
-symbol = " "
-disabled = true
-
-[elixir]
-symbol = " "
-
-[elm]
-symbol = " "
-
-[fossil_branch]
-symbol = " "
-
-[git_branch]
-symbol = " "
-
-[golang]
-symbol = " "
-
-[guix_shell]
-symbol = " "
-
-[haskell]
-symbol = " "
-
-[haxe]
-symbol = "⌘ "
-
-[hg_branch]
-symbol = " "
-
-[hostname]
-ssh_only = true
-ssh_symbol = ""
-format = '[$ssh_symbol](bold blue) on [$hostname](bold green) '
-disabled = false
-
-[java]
-symbol = " "
-
-[julia]
-symbol = " "
-
-[lua]
-symbol = " "
-
-[memory_usage]
-symbol = "󰍛 "
-
-[meson]
-symbol = "喝 "
-
-[nim]
-symbol = " "
-
-[nix_shell]
-symbol = " "
-
-[nodejs]
-symbol = " "
 
 [os.symbols]
-Alpaquita = " "
 Alpine = " "
 Amazon = " "
 Android = " "
 Arch = " "
-Artix = " "
 CentOS = " "
 Debian = " "
-DragonFly = " "
-Emscripten = " "
-EndeavourOS = " "
 Fedora = " "
 FreeBSD = " "
-Garuda = "﯑ "
-Gentoo = " "
-HardenedBSD = "ﲊ "
-Illumos = " "
 Linux = " "
-Mabox = " "
 Macos = " "
 Manjaro = " "
-Mariner = " "
-MidnightBSD = " "
 Mint = " "
-NetBSD = " "
 NixOS = " "
-OpenBSD = " "
 openSUSE = " "
-OracleLinux = " "
 Pop = " "
 Raspbian = " "
 Redhat = " "
 RedHatEnterprise = " "
-Redox = " "
-Solus = "ﴱ "
 SUSE = " "
 Ubuntu = " "
 Unknown = " "
 Windows = " "
 
-[package]
-symbol = "󰏖 "
+[username]
+style_user = 'white bold'
+style_root = 'black bold'
+format = '[$user]($style) '
+disabled = false
+show_always = true
 
-[pijul_channel]
-symbol = "🪺 "
+[hostname]
+ssh_only = false
+format = 'on [$hostname](bold yellow) '
+disabled = false
 
-[python]
-format = "[$symbol$version](bold blue) "
-symbol = " "
+# ---
 
-[rlang]
-symbol = "ﳒ "
+[kubernetes]
+format = '[$symbol$context](blue) '
+disabled = true
+[kubernetes.context_aliases]
+'k3s-(?P<mac>.*).tail.*.ts.net' = '$mac'
 
-[ruby]
-symbol = " "
+[battery]
+full_symbol = "• "
+charging_symbol = "⇡ "
+discharging_symbol = "⇣ "
+unknown_symbol = "❓ "
+empty_symbol = "❗ "
 
-[rust]
-symbol = " "
+[erlang]
+symbol = "ⓔ "
 
-[scala]
-symbol = " "
+[nodejs]
+symbol = "[⬢](bold green) "
 
-[spack]
-symbol = "🅢 "
+[pulumi]
+symbol = "🧊 "
