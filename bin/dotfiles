@@ -404,12 +404,18 @@ else
     if [ $? -ne 0 ]; then pprint_error "Failed to install oh-my-zsh"; pprint_error_info "$(cat $TMP_LOG_FILE)"; exit 1; fi
 fi
 
-curl -sS https://starship.rs/install.sh | sh -s -- -y --bin-dir /home/$RUNNING_USER/.local/bin > $TMP_LOG_FILE 2>&1
-if [ $? -ne 0 ]; then pprint_error "Failed to install starship"; pprint_error_info "$(cat $TMP_LOG_FILE)"; exit 1; fi
-# Make sure we eval starship in .zshrc
-if ! grep -q "starship init zsh" ~/.zshrc; then
-    printf 'eval "$(starship init zsh)"\n' >> ~/.zshrc
-    pprint_check "Added starship init to .zshrc"
+# Check if starship is already installed
+if ! command -v starship > $TMP_LOG_FILE 2>&1
+then
+    curl -sS https://starship.rs/install.sh | sh -s -- -y --bin-dir /home/$RUNNING_USER/.local/bin > $TMP_LOG_FILE 2>&1
+    if [ $? -ne 0 ]; then pprint_error "Failed to install starship"; pprint_error_info "$(cat $TMP_LOG_FILE)"; exit 1; fi
+    # Make sure we eval starship in .zshrc
+    if ! grep -q "starship init zsh" ~/.zshrc; then
+        printf 'eval "$(starship init zsh)"\n' >> ~/.zshrc
+        pprint_check "Added starship init to .zshrc"
+    fi
+    pprint_check "Starship installed"
+else
+    pprint_check "${green}starship${rf} found"
 fi
-pprint_check "Starship installed"
 ##################################################
