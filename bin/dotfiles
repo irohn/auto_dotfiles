@@ -417,8 +417,13 @@ fi
 # Install zsh plugins
 ZSH_PLUGINS="git zsh-autosuggestions"
 
-# Setup plugins in .zshrc
-sed -i "s/plugins=([^)]*)/plugins=($ZSH_PLUGINS)/" ~/.zshrc
+if ! grep -q "plugins=" "$HOME"/.zshrc; then
+    printf "plugins=($ZSH_PLUGINS)\n" >> "$HOME"/.zshrc
+    pprint_check "Added plugins to .zshrc"
+else
+    # Setup plugins in .zshrc
+    sed -i "s/plugins=([^)]*)/plugins=($ZSH_PLUGINS)/" ~/.zshrc
+fi
 
 # Verify $HOME/.local/bin exists
 if [ ! -d "$HOME/.local/bin" ]; then
@@ -434,7 +439,7 @@ if ! grep -q "export PATH=\$HOME/.local/bin:\$PATH" "$HOME"/.zshrc; then
 fi
 
 # Copy alias.d from apps
-/bin/cp -rf "$TMP_REPO_PATH"/apps/alias.d "$XDG_CONFIG_HOME"/alias.d > $TMP_LOG_FILE 2>&1
+/bin/cp -r "$TMP_REPO_PATH"/apps/alias.d "$XDG_CONFIG_HOME"/alias.d > $TMP_LOG_FILE 2>&1
 if [ $? -ne 0 ]; then pprint_error "Failed to copy alias.d"; pprint_error_info "$(cat $TMP_LOG_FILE)"; FAILED_TASKS="$FAILED_TASKS:$TASK_NAME"; exit 1; fi
 pprint_check "Copied alias.d to $XDG_CONFIG_HOME"
 
@@ -473,7 +478,7 @@ else
 fi
 
 # Copy tmux config into XDG_CONFIG_HOME
-/bin/cp -rf "$TMP_REPO_PATH"/apps/tmux/tmux.conf "$XDG_CONFIG_HOME"/tmux/tmux.conf > $TMP_LOG_FILE 2>&1
+/bin/cp "$TMP_REPO_PATH"/apps/tmux/tmux.conf "$XDG_CONFIG_HOME"/tmux/tmux.conf > $TMP_LOG_FILE 2>&1
 if [ $? -ne 0 ]; then pprint_error "Failed to copy tmux.conf"; pprint_error_info "$(cat $TMP_LOG_FILE)"; FAILED_TASKS="$FAILED_TASKS:$TASK_NAME"; exit 1; fi
 pprint_check "Copied tmux.conf to $XDG_CONFIG_HOME"
 ##################################################
@@ -496,7 +501,7 @@ else
 fi
 
 # Copy neovim config from apps
-/bin/cp -rf "$TMP_REPO_PATH"/apps/nvim "$XDG_CONFIG_HOME"/nvim > $TMP_LOG_FILE 2>&1
+/bin/cp -r "$TMP_REPO_PATH"/apps/nvim "$XDG_CONFIG_HOME"/nvim > $TMP_LOG_FILE 2>&1
 if [ $? -ne 0 ]; then pprint_error "Failed to copy neovim config"; pprint_error_info "$(cat $TMP_LOG_FILE)"; FAILED_TASKS="$FAILED_TASKS:$TASK_NAME"; exit 1; fi
 pprint_check "Copied neovim config to $XDG_CONFIG_HOME"
 
@@ -536,7 +541,7 @@ else
 fi
 
 # Copy starship into XDG_CONFIG_HOME
-/bin/cp -rf "$TMP_REPO_PATH"/apps/starship/starship.toml "$XDG_CONFIG_HOME"/starship.toml > $TMP_LOG_FILE 2>&1
+/bin/cp "$TMP_REPO_PATH"/apps/starship/starship.toml "$XDG_CONFIG_HOME"/starship.toml > $TMP_LOG_FILE 2>&1
 if [ $? -ne 0 ]; then pprint_error "Failed to copy starship.toml"; pprint_error_info "$(cat $TMP_LOG_FILE)"; FAILED_TASKS="$FAILED_TASKS:$TASK_NAME"; exit 1; fi
 pprint_check "Copied starship.toml to $XDG_CONFIG_HOME"
 ##################################################
