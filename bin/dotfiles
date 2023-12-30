@@ -439,7 +439,7 @@ if ! grep -q "export PATH=\$HOME/.local/bin:\$PATH" "$HOME"/.zshrc; then
 fi
 
 # Copy alias.d from apps
-/bin/cp -r "$TMP_REPO_PATH"/apps/alias.d "$XDG_CONFIG_HOME"/alias.d > $TMP_LOG_FILE 2>&1
+/bin/cp -r "$TMP_REPO_PATH"/apps/alias.d "$XDG_CONFIG_HOME" > $TMP_LOG_FILE 2>&1
 if [ $? -ne 0 ]; then pprint_error "Failed to copy alias.d"; pprint_error_info "$(cat $TMP_LOG_FILE)"; FAILED_TASKS="$FAILED_TASKS:$TASK_NAME"; exit 1; fi
 pprint_check "Copied alias.d to $XDG_CONFIG_HOME"
 
