@@ -524,4 +524,13 @@ fi
 /bin/cp -rf "$DOTFILES_REPO_PATH"/apps/nvim "$XDG_CONFIG_HOME"/nvim > $TMP_LOG_FILE 2>&1
 if [ $? -ne 0 ]; then pprint_error "Failed to copy neovim config"; pprint_error_info "$(cat $TMP_LOG_FILE)"; FAILED_TASKS="$FAILED_TASKS:$TASK_NAME"; exit 1; fi
 pprint_check "Copied neovim config to $XDG_CONFIG_HOME"
+
+# Check if gcc is installed
+if ! command -v gcc > $TMP_LOG_FILE 2>&1
+then
+    pprint_warning "${yellow}gcc${rf} is required for neovim plugins"
+    pprint "Installing gcc..."
+    install_with_package_manager gcc
+    pprint_check "${green}gcc${rf} installed"
+fi
 ##################################################
