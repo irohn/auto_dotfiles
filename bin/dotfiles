@@ -98,7 +98,7 @@ SSH_DIR="$HOME/.ssh"
 LC_ALL="C.UTF-8" # locale for ansible
 HCP_CREDS_PATH="$HOME/.secrets/dotfiles_vault_creds"
 TMP_LOG_FILE="/tmp/dotfiles.log"
-DOTFILES_REPO_PATH="$HOME/.dotfiles"
+TMP_REPO_PATH="/tmp/dotfiles.d"
 
 export XDG_CONFIG_HOME="$HOME/.config"
 
@@ -122,6 +122,7 @@ cleanup() {
     SKIPPED_TASKS=$(echo "$SKIPPED_TASKS" | sed 's/^://')
     FAILED_TASKS=$(echo "$FAILED_TASKS" | sed 's/^://')
     rm -f "$TMP_LOG_FILE"
+    rm -rf "$TMP_REPO_PATH"
     
     if [ $exit_code -eq 0 ]; then
         if [ ! -z "$SKIPPED_TASKS" ]; then
@@ -260,7 +261,7 @@ else
     pprint "Local bin directory found"
 fi
 
-for file in "$DOTFILES_REPO_PATH/bin/"*; do
+for file in "$TMP_REPO_PATH/bin/"*; do
     # check if link already exists
     if [ -L "$HOME/.local/bin/$(basename "$file")" ]; then continue; fi
     pprint "Linking $file <-> $HOME/.local/bin"
@@ -275,31 +276,11 @@ done
 #                      GIT                       #
 TASK_NAME="git"
 
-# Check if dotfiles repository is cloned
-if [ ! -d "$DOTFILES_REPO_PATH" ]
-then
-    pprint_warning "Dotfiles repository not found"
-    pprint "Cloning dotfiles repository..."
-    git clone --depth 1 --branch main https://github.com/irohn/dotfiles.git "$DOTFILES_REPO_PATH" > $TMP_LOG_FILE 2>&1
-    if [ $? -ne 0 ]; then pprint_error "Failed to clone dotfiles repository"; pprint_error_info "$(cat $TMP_LOG_FILE)"; FAILED_TASKS="$FAILED_TASKS:$TASK_NAME"; exit 1; fi
-    pprint_check "Dotfiles repository cloned"
-else
-    pprint "Dotfiles repository is present"
-    # Check if dotfiles repository is up to date
-    cd "$DOTFILES_REPO_PATH"
-    git fetch --depth 1 origin > $TMP_LOG_FILE 2>&1
-    if [ $? -ne 0 ]; then pprint_error "Failed to fetch dotfiles repository"; pprint_error_info "$(cat $TMP_LOG_FILE)"; FAILED_TASKS="$FAILED_TASKS:$TASK_NAME"; exit 1; fi
-    if [ "$(git rev-parse HEAD)" != "$(git rev-parse @{u})" ]
-    then
-        pprint_warning "Dotfiles repository is not up to date"
-        pprint "Pulling latest changes..."
-        git pull > $TMP_LOG_FILE 2>&1
-        if [ $? -ne 0 ]; then pprint_error "Failed to pull dotfiles repository"; FAILED_TASKS="$FAILED_TASKS:$TASK_NAME"; exit 1; fi
-        pprint_check "Dotfiles repository is up to date"
-    else
-        pprint_check "Dotfiles repository is up to date"
-    fi
-fi
+# Clone repo
+pprint "Cloning dotfiles repository..."
+git clone --depth 1 --branch main https://github.com/irohn/dotfiles.git "$TMP_REPO_PATH" > $TMP_LOG_FILE 2>&1
+if [ $? -ne 0 ]; then pprint_error "Failed to clone dotfiles repository"; pprint_error_info "$(cat $TMP_LOG_FILE)"; FAILED_TASKS="$FAILED_TASKS:$TASK_NAME"; exit 1; fi
+pprint_check "Dotfiles repository cloned"
 ##################################################
 
 
@@ -447,7 +428,7 @@ if ! grep -q "export PATH=\$HOME/.local/bin:\$PATH" "$HOME"/.zshrc; then
 fi
 
 # Copy alias.d from apps
-/bin/cp -rf "$DOTFILES_REPO_PATH"/apps/alias.d "$XDG_CONFIG_HOME"/alias.d > $TMP_LOG_FILE 2>&1
+/bin/cp -rf "$TMP_REPO_PATH"/apps/alias.d "$XDG_CONFIG_HOME"/alias.d > $TMP_LOG_FILE 2>&1
 if [ $? -ne 0 ]; then pprint_error "Failed to copy alias.d"; pprint_error_info "$(cat $TMP_LOG_FILE)"; FAILED_TASKS="$FAILED_TASKS:$TASK_NAME"; exit 1; fi
 pprint_check "Copied alias.d to $XDG_CONFIG_HOME"
 
@@ -486,7 +467,7 @@ else
 fi
 
 # Copy tmux config into XDG_CONFIG_HOME
-/bin/cp -rf "$DOTFILES_REPO_PATH"/apps/tmux/tmux.conf "$XDG_CONFIG_HOME"/tmux/tmux.conf > $TMP_LOG_FILE 2>&1
+/bin/cp -rf "$TMP_REPO_PATH"/apps/tmux/tmux.conf "$XDG_CONFIG_HOME"/tmux/tmux.conf > $TMP_LOG_FILE 2>&1
 if [ $? -ne 0 ]; then pprint_error "Failed to copy tmux.conf"; pprint_error_info "$(cat $TMP_LOG_FILE)"; FAILED_TASKS="$FAILED_TASKS:$TASK_NAME"; exit 1; fi
 pprint_check "Copied tmux.conf to $XDG_CONFIG_HOME"
 ##################################################
@@ -509,7 +490,7 @@ else
 fi
 
 # Copy neovim config from apps
-/bin/cp -rf "$DOTFILES_REPO_PATH"/apps/nvim "$XDG_CONFIG_HOME"/nvim > $TMP_LOG_FILE 2>&1
+/bin/cp -rf "$TMP_REPO_PATH"/apps/nvim "$XDG_CONFIG_HOME"/nvim > $TMP_LOG_FILE 2>&1
 if [ $? -ne 0 ]; then pprint_error "Failed to copy neovim config"; pprint_error_info "$(cat $TMP_LOG_FILE)"; FAILED_TASKS="$FAILED_TASKS:$TASK_NAME"; exit 1; fi
 pprint_check "Copied neovim config to $XDG_CONFIG_HOME"
 
@@ -549,7 +530,7 @@ else
 fi
 
 # Copy starship into XDG_CONFIG_HOME
-/bin/cp -rf "$DOTFILES_REPO_PATH"/apps/starship/starship.toml "$XDG_CONFIG_HOME"/starship.toml > $TMP_LOG_FILE 2>&1
+/bin/cp -rf "$TMP_REPO_PATH"/apps/starship/starship.toml "$XDG_CONFIG_HOME"/starship.toml > $TMP_LOG_FILE 2>&1
 if [ $? -ne 0 ]; then pprint_error "Failed to copy starship.toml"; pprint_error_info "$(cat $TMP_LOG_FILE)"; FAILED_TASKS="$FAILED_TASKS:$TASK_NAME"; exit 1; fi
 pprint_check "Copied starship.toml to $XDG_CONFIG_HOME"
 ##################################################
