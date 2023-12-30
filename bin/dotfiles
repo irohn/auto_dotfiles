@@ -453,7 +453,7 @@ pprint_check "Copied alias.d to $XDG_CONFIG_HOME"
 
 # Ensure loading all files in alias.d is present in .zshrc
 if ! grep -q "for file in \$XDG_CONFIG_HOME/alias.d/*; do source \$file; done" "$HOME"/.zshrc; then
-    printf "for file in $XDG_CONFIG_HOME/alias.d/*; do source $file; done\n" >> "$HOME"/.zshrc
+    printf "for file in $XDG_CONFIG_HOME/alias.d/*; do source \$file; done\n" >> "$HOME"/.zshrc
     pprint_check "Added loading all files in alias.d to .zshrc"
 fi
 ##################################################
