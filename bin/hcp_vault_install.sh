@@ -32,7 +32,7 @@ esac
 VLT_VERSION="1.0.0"
 VLT_URL="https://releases.hashicorp.com/vlt/${VLT_VERSION}/vlt_${VLT_VERSION}_${OS}_${ARCH}.zip"
 
-curl -L -o - $VLT_URL
+curl -L -o vlt.zip $VLT_URL
 unzip vlt.zip
 rm vlt.zip
 mv vlt $HOME/.local/bin/vlt
