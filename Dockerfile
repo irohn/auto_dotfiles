@@ -9,8 +9,6 @@ RUN apt update && apt install -y \
 RUN useradd -m -s /bin/bash -G sudo ubuntu && \
     echo "ubuntu ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 
-ENV PATH=/home/ubuntu/.local/bin:$PATH
-
 USER ubuntu
 
 WORKDIR /home/ubuntu
