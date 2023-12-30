@@ -140,7 +140,7 @@ TASK_NAME="require"
 # Check if $HOME/.local/bin is in PATH
 case ":$PATH:" in
     *":$HOME/.local/bin:"*)
-        pprint_check "${green}$HOME/.local/bin${rf} is in PATH"
+        pprint "$HOME/.local/bin is in PATH"
         ;;
     *)
         pprint_warning "${yellow}$HOME/.local/bin${rf} is not in PATH"
@@ -221,6 +221,24 @@ then
 else
     pprint_check "${green}git${rf} found"
 fi
+
+if [ ! -d "$HOME/.local/bin" ]; then
+    pprint_warning "Directory $HOME/.local/bin not found"
+    pprint "Creating directory $HOME/.local/bin..."
+    mkdir -p "$HOME/.local/bin" > $TMP_LOG_FILE 2>&1
+    if [ $? -ne 0 ]; then pprint_error "Failed to create directory $HOME/.local/bin"; pprint_error_info "$(cat $TMP_LOG_FILE)"; exit 1; fi
+    pprint_check "Created directory ${green}$HOME/.local/bin${rf}"
+else
+    pprint "Local bin directory found"
+fi
+
+for file in "$DOTFILES_REPO_PATH/bin/"*; do
+    # check if link already exists
+    if [ -L "$HOME/.local/bin/$(basename "$file")" ]; then continue; fi
+    pprint "Linking $file <-> $HOME/.local/bin"
+    ln -sf "$file" "$HOME/.local/bin/$(basename "$file")" > $TMP_LOG_FILE 2>&1
+    if [ $? -ne 0 ]; then pprint_error "Failed to link $file to $HOME/.local/bin/$(basename "$file")"; pprint_error_info "$(cat $TMP_LOG_FILE)"; exit 1; fi
+done
 ##################################################
 
 
@@ -238,7 +256,7 @@ then
     if [ $? -ne 0 ]; then pprint_error "Failed to clone dotfiles repository"; pprint_error_info "$(cat $TMP_LOG_FILE)"; exit 1; fi
     pprint_check "Dotfiles repository cloned"
 else
-    pprint_check "Dotfiles repository found"
+    pprint "Dotfiles repository is present"
     # Check if dotfiles repository is up to date
     cd "$DOTFILES_REPO_PATH"
     git fetch --depth 1 origin > $TMP_LOG_FILE 2>&1
@@ -254,24 +272,6 @@ else
         pprint_check "Dotfiles repository is up to date"
     fi
 fi
-
-if [ ! -d "$HOME/.local/bin" ]; then
-    pprint_warning "Directory $HOME/.local/bin not found"
-    pprint "Creating directory $HOME/.local/bin..."
-    mkdir -p "$HOME/.local/bin" > $TMP_LOG_FILE 2>&1
-    if [ $? -ne 0 ]; then pprint_error "Failed to create directory $HOME/.local/bin"; pprint_error_info "$(cat $TMP_LOG_FILE)"; exit 1; fi
-    pprint_check "Directory $HOME/.local/bin created"
-else
-    pprint_check "Directory $HOME/.local/bin found"
-fi
-
-for file in "$DOTFILES_REPO_PATH/bin/"*; do
-    # check if link already exists
-    if [ -L "$HOME/.local/bin/$(basename "$file")" ]; then continue; fi
-    pprint "Linking $file <-> $HOME/.local/bin"
-    ln -sf "$file" "$HOME/.local/bin/$(basename "$file")" > $TMP_LOG_FILE 2>&1
-    if [ $? -ne 0 ]; then pprint_error "Failed to link $file to $HOME/.local/bin/$(basename "$file")"; pprint_error_info "$(cat $TMP_LOG_FILE)"; exit 1; fi
-done
 ##################################################
 
 
@@ -397,25 +397,34 @@ else
 fi
 # Check if oh-my-zsh already installed
 if [ -d "$HOME/.oh-my-zsh" ]; then
-    pprint_check "oh-my-zsh already installed"
+    pprint "oh-my-zsh already installed"
 else
     # Install oh-my-zsh
     sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended > $TMP_LOG_FILE 2>&1
     if [ $? -ne 0 ]; then pprint_error "Failed to install oh-my-zsh"; pprint_error_info "$(cat $TMP_LOG_FILE)"; exit 1; fi
 fi
 
+# Add $HOME/.local/bin to PATH
+if ! grep -q "export PATH=\$HOME/.local/bin:\$PATH" "$HOME"/.zshrc; then
+    printf 'export PATH=$HOME/.local/bin:$PATH\n' >> "$HOME"/.zshrc
+    pprint_check "Added $HOME/.local/bin to PATH in .zshrc"
+fi
+
 # Check if starship is already installed
-if ! command -v starship > $TMP_LOG_FILE 2>&1
-then
+if ! command -v starship > $TMP_LOG_FILE 2>&1; then
     curl -sS https://starship.rs/install.sh | sh -s -- -y --bin-dir /home/$RUNNING_USER/.local/bin > $TMP_LOG_FILE 2>&1
     if [ $? -ne 0 ]; then pprint_error "Failed to install starship"; pprint_error_info "$(cat $TMP_LOG_FILE)"; exit 1; fi
-    # Make sure we eval starship in .zshrc
-    if ! grep -q "starship init zsh" ~/.zshrc; then
-        printf 'eval "$(starship init zsh)"\n' >> ~/.zshrc
+    # Make sure we eval starship in .zshrc and at the end of the file
+    if ! grep -q "starship init zsh" "$HOME/".zshrc; then
+        printf 'eval "$(starship init zsh)"\n' >> "$HOME/".zshrc
         pprint_check "Added starship init to .zshrc"
     fi
     pprint_check "Starship installed"
 else
     pprint_check "${green}starship${rf} found"
+    line_number=$(grep -n "starship init" "$HOME/".zshrc | cut -d : -f 1)
+    sed -i "${line_number}d" "$HOME"/.zshrc
+    printf 'eval "$(starship init zsh)"\n' >> "$HOME/".zshrc
+    pprint_check "Moved starship init to the bottom of .zshrc"
 fi
 ##################################################
