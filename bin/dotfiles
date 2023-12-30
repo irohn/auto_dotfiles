@@ -446,28 +446,16 @@ if ! grep -q "export PATH=\$HOME/.local/bin:\$PATH" "$HOME"/.zshrc; then
     pprint_check "Added $HOME/.local/bin to PATH in .zshrc"
 fi
 
-# Check if starship is already installed
-if ! command -v starship > $TMP_LOG_FILE 2>&1; then
-    curl -sS https://starship.rs/install.sh | sh -s -- -y --bin-dir $HOME/.local/bin > $TMP_LOG_FILE 2>&1
-    if [ $? -ne 0 ]; then pprint_error "Failed to install starship"; pprint_error_info "$(cat $TMP_LOG_FILE)"; FAILED_TASKS="$FAILED_TASKS:$TASK_NAME"; exit 1; fi
-    # Make sure we eval starship in .zshrc and at the end of the file
-    if ! grep -q "starship init zsh" "$HOME/".zshrc; then
-        printf 'eval "$(starship init zsh)"\n' >> "$HOME/".zshrc
-        pprint_check "Added starship init to .zshrc"
-    fi
-    pprint_check "Starship installed"
-else
-    pprint_check "${green}starship${rf} found"
-    line_number=$(grep -n "starship init" "$HOME/".zshrc | cut -d : -f 1)
-    sed -i "${line_number}d" "$HOME"/.zshrc
-    printf 'eval "$(starship init zsh)"\n' >> "$HOME/".zshrc
-    pprint_check "Moved starship init to the bottom of .zshrc"
-fi
+# Copy alias.d from apps
+/bin/cp -rf "$DOTFILES_REPO_PATH"/apps/alias.d "$XDG_CONFIG_HOME"/alias.d > $TMP_LOG_FILE 2>&1
+if [ $? -ne 0 ]; then pprint_error "Failed to copy alias.d"; pprint_error_info "$(cat $TMP_LOG_FILE)"; FAILED_TASKS="$FAILED_TASKS:$TASK_NAME"; exit 1; fi
+pprint_check "Copied alias.d to $XDG_CONFIG_HOME"
 
-# Copy starship into XDG_CONFIG_HOME
-    /bin/cp -rf "$DOTFILES_REPO_PATH"/apps/starship/starship.toml "$XDG_CONFIG_HOME"/starship.toml > $TMP_LOG_FILE 2>&1
-    if [ $? -ne 0 ]; then pprint_error "Failed to copy starship.toml"; pprint_error_info "$(cat $TMP_LOG_FILE)"; FAILED_TASKS="$FAILED_TASKS:$TASK_NAME"; exit 1; fi
-    pprint_check "Copied starship.toml to $XDG_CONFIG_HOME"
+# Ensure loading all files in alias.d is present in .zshrc
+if ! grep -q "for file in \$XDG_CONFIG_HOME/alias.d/*; do source \$file; done" "$HOME"/.zshrc; then
+    printf 'for file in $XDG_CONFIG_HOME/alias.d/*; do source $file; done\n' >> "$HOME"/.zshrc
+    pprint_check "Added loading all files in alias.d to .zshrc"
+fi
 ##################################################
 
 
@@ -533,4 +521,35 @@ then
     install_with_package_manager gcc
     pprint_check "${green}gcc${rf} installed"
 fi
+##################################################
+
+
+
+##################################################
+#                    STARSHIP                    #
+TASK_NAME="starship"
+# Keep at end of of script
+
+# Check if starship is already installed
+if ! command -v starship > $TMP_LOG_FILE 2>&1; then
+    curl -sS https://starship.rs/install.sh | sh -s -- -y --bin-dir $HOME/.local/bin > $TMP_LOG_FILE 2>&1
+    if [ $? -ne 0 ]; then pprint_error "Failed to install starship"; pprint_error_info "$(cat $TMP_LOG_FILE)"; FAILED_TASKS="$FAILED_TASKS:$TASK_NAME"; exit 1; fi
+    # Make sure we eval starship in .zshrc and at the end of the file
+    if ! grep -q "starship init zsh" "$HOME/".zshrc; then
+        printf 'eval "$(starship init zsh)"\n' >> "$HOME/".zshrc
+        pprint_check "Added starship init to .zshrc"
+    fi
+    pprint_check "Starship installed"
+else
+    pprint_check "${green}starship${rf} found"
+    line_number=$(grep -n "starship init" "$HOME/".zshrc | cut -d : -f 1)
+    sed -i "${line_number}d" "$HOME"/.zshrc
+    printf 'eval "$(starship init zsh)"\n' >> "$HOME/".zshrc
+    pprint_check "Moved starship init to the bottom of .zshrc"
+fi
+
+# Copy starship into XDG_CONFIG_HOME
+/bin/cp -rf "$DOTFILES_REPO_PATH"/apps/starship/starship.toml "$XDG_CONFIG_HOME"/starship.toml > $TMP_LOG_FILE 2>&1
+if [ $? -ne 0 ]; then pprint_error "Failed to copy starship.toml"; pprint_error_info "$(cat $TMP_LOG_FILE)"; FAILED_TASKS="$FAILED_TASKS:$TASK_NAME"; exit 1; fi
+pprint_check "Copied starship.toml to $XDG_CONFIG_HOME"
 ##################################################
