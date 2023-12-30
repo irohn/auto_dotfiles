@@ -294,7 +294,7 @@ else
         pprint_warning "Dotfiles repository is not up to date"
         pprint "Pulling latest changes..."
         git pull > $TMP_LOG_FILE 2>&1
-        if [ $? -ne 0 ]; then pprint_error "Failed to pull dotfiles repository"; pprint_error_info "$(cat $TMP_LOG_FILE)"; FAILED_TASKS="$FAILED_TASKS:$TASK_NAME"; exit 1; fi
+        if [ $? -ne 0 ]; then pprint_error "Failed to pull dotfiles repository"; FAILED_TASKS="$FAILED_TASKS:$TASK_NAME"; exit 1; fi
         pprint_check "Dotfiles repository is up to date"
     else
         pprint_check "Dotfiles repository is up to date"
@@ -453,7 +453,7 @@ pprint_check "Copied alias.d to $XDG_CONFIG_HOME"
 
 # Ensure loading all files in alias.d is present in .zshrc
 if ! grep -q "for file in \$XDG_CONFIG_HOME/alias.d/*; do source \$file; done" "$HOME"/.zshrc; then
-    printf 'for file in $XDG_CONFIG_HOME/alias.d/*; do source $file; done\n' >> "$HOME"/.zshrc
+    printf "for file in $XDG_CONFIG_HOME/alias.d/*; do source $file; done\n" >> "$HOME"/.zshrc
     pprint_check "Added loading all files in alias.d to .zshrc"
 fi
 ##################################################
