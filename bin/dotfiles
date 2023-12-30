@@ -414,6 +414,12 @@ else
     if [ $? -ne 0 ]; then pprint_error "Failed to install oh-my-zsh"; pprint_error_info "$(cat $TMP_LOG_FILE)"; FAILED_TASKS="$FAILED_TASKS:$TASK_NAME"; exit 1; fi
 fi
 
+# Install zsh plugins
+ZSH_PLUGINS="git zsh-autosuggestions"
+
+# Setup plugins in .zshrc
+sed -i "s/plugins=([^)]*)/plugins=($ZSH_PLUGINS)/" ~/.zshrc
+
 # Verify $HOME/.local/bin exists
 if [ ! -d "$HOME/.local/bin" ]; then
     mkdir -p "$HOME/.local/bin" > $TMP_LOG_FILE 2>&1
