@@ -44,6 +44,12 @@ ssh_only = false
 format = 'on [$hostname](bold yellow) '
 disabled = false
 
+[directory]
+truncation_length = 1
+read_only_style = '197'
+read_only = '  '
+format = 'at [$path]($style)[$read_only]($read_only_style) '
+
 # ---
 
 [kubernetes]
