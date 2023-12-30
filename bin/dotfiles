@@ -11,13 +11,13 @@ while [ $# -gt 0 ]; do
             /bin/printf "\n"
             /bin/printf "Available options are:\n"
             /bin/printf "    -h, --help    Show this help message\n"
-            /bin/printf "    --skip-vault  Skip secret-related tasks\n"
+            /bin/printf "    --skip-auth   Skip vault authentication related tasks\n"
             /bin/printf "    --debug       Enable debug mode\n"
             /bin/printf "\n"
             exit 0
             ;;
-        --skip-vault)
-            SKIP_VAULT=true
+        --skip-auth)
+            SKIP_AUTH=true
             shift
             ;;
         --debug)
@@ -82,7 +82,7 @@ print_icon() { /bin/printf "${1} %s " "$(task_name)"; shift; /bin/printf "${@}\n
 TASK_NAME="init"
 
 START_TIME=$(date +%s)
-SKIP_VAULT=${SKIP_VAULT:-false}
+SKIP_AUTH=${SKIP_AUTH:-false}
 DEBUG_MODE=${DEBUG_MODE:-false}
 if $DEBUG_MODE; then pprint_warning "${yellow}Debug mode enabled${rf}"; fi
 
@@ -280,7 +280,7 @@ fi
 #                      VAULT                     #
 TASK_NAME="vault"
 
-if $SKIP_VAULT; then
+if $SKIP_AUTH; then
     pprint_skip "Skipping vault related tasks"
 else
     if ! command -v vlt > $TMP_LOG_FILE 2>&1
