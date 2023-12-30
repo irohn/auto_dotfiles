@@ -277,10 +277,9 @@ else
     if ! command -v vlt > $TMP_LOG_FILE 2>&1
     then
         # Try to install vlt from script
-        . "$DOTFILES_REPO_PATH/bin/hcp_vault_install.sh" > $TMP_LOG_FILE 2>&1
+        . "$DOTFILES_REPO_PATH/bin/hcp_vault_install.sh" #> $TMP_LOG_FILE 2>&1
         if [ $? -ne 0 ]; then
             pprint_error "Failed to install vlt"
-            pprint_error_info "$(cat $TMP_LOG_FILE)"
             pprint_error_info "To install manually go to"
             pprint_error_info "${underline}${blue}https://developer.hashicorp.com/vault/tutorials/hcp-vault-secrets-get-started/hcp-vault-secrets-install-cli${rf}"
             exit 1
@@ -348,7 +347,7 @@ fi
 #                     SHELL                      #
 TASK_NAME="shell"
 
-source "$DOTFILES_REPO_PATH/bin/zsh_install.sh" > $TMP_LOG_FILE 2>&1
+. "$DOTFILES_REPO_PATH/bin/zsh_install.sh" > $TMP_LOG_FILE 2>&1
 if [ $? -ne 0 ]; then pprint_error "Failed to install zsh"; pprint_error_info "$(cat $TMP_LOG_FILE)"; exit 1; fi
 pprint_check "ZSH installed"
 
