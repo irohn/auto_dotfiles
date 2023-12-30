@@ -105,8 +105,7 @@ export XDG_CONFIG_HOME="$HOME/.config"
 pprint "Operating System: $OPERATING_SYSTEM"
 pprint "Processor architecture: $PROCESSOR_ARCHITECTURE"
 pprint "Linux distribution: $LINUX_DISTRO"
-if [ "$RUNNING_USER" = "root" ]
-then
+if [ "$RUNNING_USER" = "root" ]; then
     pprint_warning "Running as ${red}$RUNNING_USER${rf} is not recommended!"
     SUDO=""
 else
@@ -173,10 +172,10 @@ install_with_package_manager() {
         *linux*)
             case "$LINUX_DISTRO" in
                 *ubuntu*|*debian*)
-                    $SUDO apt update > /dev/null 2>&1 && apt-get -y install "$1" > $TMP_LOG_FILE 2>&1; if [ $? -ne 0 ]; then pprint_error "Failed to install $1"; pprint_error_info "$(cat $TMP_LOG_FILE)"; FAILED_TASKS="$FAILED_TASKS:$TASK_NAME"; exit 1; fi
+                    $SUDO apt-get -y install "$1" > $TMP_LOG_FILE 2>&1; if [ $? -ne 0 ]; then pprint_error "Failed to install $1"; pprint_error_info "$(cat $TMP_LOG_FILE)"; FAILED_TASKS="$FAILED_TASKS:$TASK_NAME"; exit 1; fi
                     ;;
                 *arch*)
-                    $SUDO padman -Sy > /dev/null 2>&1 && pacman -S "$1" --noconfirm > $TMP_LOG_FILE 2>&1; if [ $? -ne 0 ]; then pprint_error "Failed to install $1"; pprint_error_info "$(cat $TMP_LOG_FILE)"; FAILED_TASKS="$FAILED_TASKS:$TASK_NAME"; exit 1; fi
+                    $SUDO pacman -S "$1" --noconfirm > $TMP_LOG_FILE 2>&1; if [ $? -ne 0 ]; then pprint_error "Failed to install $1"; pprint_error_info "$(cat $TMP_LOG_FILE)"; FAILED_TASKS="$FAILED_TASKS:$TASK_NAME"; exit 1; fi
                     ;;
                 *fedora*)
                     $SUDO dnf -y install "$1" > $TMP_LOG_FILE 2>&1; if [ $? -ne 0 ]; then pprint_error "Failed to install $1"; pprint_error_info "$(cat $TMP_LOG_FILE)"; FAILED_TASKS="$FAILED_TASKS:$TASK_NAME"; exit 1; fi
