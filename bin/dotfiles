@@ -106,7 +106,9 @@ pprint "Linux distribution: $LINUX_DISTRO"
 if [ "$RUNNING_USER" = "root" ]
 then
     pprint_warning "Running as ${red}$RUNNING_USER${rf} is not recommended!"
+    SUDO=""
 else
+    SUDO="sudo"
     pprint "Running as user ${green}$RUNNING_USER${rf}"
 fi
 
@@ -166,19 +168,19 @@ install_with_package_manager() {
         *linux*)
             case "$LINUX_DISTRO" in
                 *ubuntu*|*debian*)
-                    sudo apt-get -y install "$1" > $TMP_LOG_FILE 2>&1; if [ $? -ne 0 ]; then pprint_error "Failed to install $1"; pprint_error_info "$(cat $TMP_LOG_FILE)"; exit 1; fi
+                    $SUDO apt-get -y install "$1" > $TMP_LOG_FILE 2>&1; if [ $? -ne 0 ]; then pprint_error "Failed to install $1"; pprint_error_info "$(cat $TMP_LOG_FILE)"; exit 1; fi
                     ;;
                 *arch*)
-                    sudo pacman -S "$1" --noconfirm > $TMP_LOG_FILE 2>&1; if [ $? -ne 0 ]; then pprint_error "Failed to install $1"; pprint_error_info "$(cat $TMP_LOG_FILE)"; exit 1; fi
+                    $SUDO pacman -S "$1" --noconfirm > $TMP_LOG_FILE 2>&1; if [ $? -ne 0 ]; then pprint_error "Failed to install $1"; pprint_error_info "$(cat $TMP_LOG_FILE)"; exit 1; fi
                     ;;
                 *fedora*)
-                    sudo dnf -y install "$1" > $TMP_LOG_FILE 2>&1; if [ $? -ne 0 ]; then pprint_error "Failed to install $1"; pprint_error_info "$(cat $TMP_LOG_FILE)"; exit 1; fi
+                    $SUDO dnf -y install "$1" > $TMP_LOG_FILE 2>&1; if [ $? -ne 0 ]; then pprint_error "Failed to install $1"; pprint_error_info "$(cat $TMP_LOG_FILE)"; exit 1; fi
                     ;;
                 *centos*)
-                    sudo yum -y install "$1" > $TMP_LOG_FILE 2>&1; if [ $? -ne 0 ]; then pprint_error "Failed to install $1"; pprint_error_info "$(cat $TMP_LOG_FILE)"; exit 1; fi
+                    $SUDO yum -y install "$1" > $TMP_LOG_FILE 2>&1; if [ $? -ne 0 ]; then pprint_error "Failed to install $1"; pprint_error_info "$(cat $TMP_LOG_FILE)"; exit 1; fi
                     ;;
                 *alpine*)
-                    sudo apk add "$1" > $TMP_LOG_FILE 2>&1; if [ $? -ne 0 ]; then pprint_error "Failed to install $1"; pprint_error_info "$(cat $TMP_LOG_FILE)"; exit 1; fi
+                    $SUDO apk add "$1" > $TMP_LOG_FILE 2>&1; if [ $? -ne 0 ]; then pprint_error "Failed to install $1"; pprint_error_info "$(cat $TMP_LOG_FILE)"; exit 1; fi
                     ;;
                 *)
                     pprint "${red}Unknown Linux distribution${rf}"
@@ -458,7 +460,7 @@ else
 fi
 
 # Copy starship into XDG_CONFIG_HOME
-    /bin/cp -rf "$DOTFILES_REPO_PATH"/starship/starship.toml "$XDG_CONFIG_HOME"/starship.toml > $TMP_LOG_FILE 2>&1
+    /bin/cp -rf "$DOTFILES_REPO_PATH"/apps/starship/starship.toml "$XDG_CONFIG_HOME"/starship.toml > $TMP_LOG_FILE 2>&1
     if [ $? -ne 0 ]; then pprint_error "Failed to copy starship.toml"; pprint_error_info "$(cat $TMP_LOG_FILE)"; exit 1; fi
     pprint_check "Copied starship.toml to $XDG_CONFIG_HOME"
 ##################################################
