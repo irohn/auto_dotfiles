@@ -409,10 +409,6 @@ fi
 # Check if oh-my-zsh already installed
 if [ -d "$HOME/.oh-my-zsh" ]; then
     pprint "oh-my-zsh already installed"
-    # Ensure oh-my-zsh is exported in .zshrc
-    if ! grep -q "export ZSH=" "$HOME"/.zshrc; then
-        printf "export ZSH=\"\$HOME/.zshrc\"\n"
-    fi
 else
     # Install oh-my-zsh
     sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended > $TMP_LOG_FILE 2>&1
@@ -420,21 +416,13 @@ else
     pprint_check "Oh-My-Zsh installed"
 fi
 
-# Install zsh plugins
-ZSH_PLUGINS="git zsh-autosuggestions"
-
-# zsh-history-substring-search
-if [ ! -d "$HOME/.oh-my-zsh/custom/plugins/zsh-history-substring-search" ]; then
-    git clone https://github.com/zsh-users/zsh-history-substring-search ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-history-substring-search > $TMP_LOG_FILE 2>&1
-    if [ $? -ne 0 ]; then
-        pprint_error "Failed to clone zsh-history-substring-search"
-        FAILED_TASKS="$FAILED_TASKS:$TASK_NAME"
-    else
-        ZSH_PLUGINS="$ZSH_PLUGINS zsh-history-substring-search"
-    fi
-else
-    ZSH_PLUGINS="$ZSH_PLUGINS zsh-history-substring-search"
+# Ensure oh-my-zsh is exported in .zshrc
+if ! grep -q "export ZSH=" "$HOME"/.zshrc; then
+    printf "export ZSH=\"\$HOME/.oh-my-zsh\"\n" >> "$HOME"/.zshrc
 fi
+
+# Install zsh plugins
+ZSH_PLUGINS="git"
 
 if ! grep -q "plugins=" "$HOME"/.zshrc; then
     printf "plugins=($ZSH_PLUGINS)\n" >> "$HOME"/.zshrc
@@ -445,7 +433,7 @@ else
 fi
 
 if ! grep -q "source \$ZSH/oh-my-zsh.sh" "$HOME"/.zshrc; then
-    printf "source \$ZSH/oh-my-zsh.sh\n"
+    printf "source \$ZSH/oh-my-zsh.sh\n" >> "$HOME"/.zshrc
 fi
 
 # Verify $HOME/.local/bin exists
