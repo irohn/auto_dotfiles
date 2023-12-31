@@ -409,10 +409,15 @@ fi
 # Check if oh-my-zsh already installed
 if [ -d "$HOME/.oh-my-zsh" ]; then
     pprint "oh-my-zsh already installed"
+    # Ensure oh-my-zsh is exported in .zshrc
+    if ! grep -q "export ZSH=" "$HOME"/.zshrc; then
+        printf "export ZSH=\"\$HOME/.zshrc\"\n"
+    fi
 else
     # Install oh-my-zsh
     sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended > $TMP_LOG_FILE 2>&1
     if [ $? -ne 0 ]; then pprint_error "Failed to install oh-my-zsh"; pprint_error_info "$(cat $TMP_LOG_FILE)"; FAILED_TASKS="$FAILED_TASKS:$TASK_NAME"; exit 1; fi
+    pprint_check "Oh-My-Zsh installed"
 fi
 
 # Install zsh plugins
@@ -437,6 +442,10 @@ if ! grep -q "plugins=" "$HOME"/.zshrc; then
 else
     # Setup plugins in .zshrc
     sed -i "s/plugins=([^)]*)/plugins=($ZSH_PLUGINS)/" ~/.zshrc
+fi
+
+if ! grep -q "source \$ZSH/oh-my-zsh.sh" "$HOME"/.zshrc; then
+    printf "source \$ZSH/oh-my-zsh.sh\n"
 fi
 
 # Verify $HOME/.local/bin exists
