@@ -38,6 +38,9 @@ done
 #                TEXT FORMATTING                 #
 TASK_NAME="format"
 
+cols=$(tput cols)
+rows=$(tput lines)
+
 #                     COLORS                     #
 black="\033[38;5;0m"        # black
 red="\033[38;5;1m"          # red
@@ -71,8 +74,9 @@ pprint_error() { printf "${bold}${red}${x_mark}${rf} %s ${@}\n" "$(task_name)"; 
 pprint_warning() { printf "${bold}${yellow}${warning}${rf} %s ${@}\n" "$(task_name)"; } # prretty print warning
 pprint_error_info() { printf "${bold}${red}${default_symbol}${rf} %s ${@}\n" "$(task_name)"; } # prretty print error log or info
 pprint_skip() { printf "${bold}${blue}${right_arrow}${rf} %s ${@}\n" "$(task_name)"; } # prretty print skip
-
 print_icon() { printf "${1} %s " "$(task_name)"; shift; printf "${@}\n"; } # print icon
+separator() { printf "\n${bold}${gray}$(printf '─%.0s' {1..80})${rf}\n\n"; } # print separator
+
 ##################################################
 
 
@@ -114,8 +118,9 @@ else
 fi
 
 cleanup() {
+    separator
     exit_code=$?
-    TASK_NAME="exit"
+    TASK_NAME="cleanup"
     END_TIME=$(date +%s)
     ELAPSED_TIME=$(($END_TIME - $START_TIME))
     ELAPESED_TIME_FORMATTED=$(printf '%dh:%dm:%ds\n' $(($ELAPSED_TIME/3600)) $(($ELAPSED_TIME%3600/60)) $(($ELAPSED_TIME%60)))
@@ -125,11 +130,11 @@ cleanup() {
     rm -rf "$TMP_REPO_PATH"
    
     if [ ! -z "$SKIPPED_TASKS" ]; then
-        pprint_skip "Skipped tasks: ${cyan}$(IFS=:; for task in $SKIPPED_TASKS; do printf "$task "; done)${rf}"
+        pprint_skip "Tasks skipped: ${cyan}$(IFS=:; for task in $SKIPPED_TASKS; do printf "$task "; done)${rf}"
     fi
 
     if [ -z "$FAILED_TASKS" ]; then
-        pprint "Finished successfully took ${purple}$ELAPESED_TIME_FORMATTED${rf}"
+        pprint "Finished successfully in ${purple}$ELAPESED_TIME_FORMATTED${rf}"
     else
         pprint_error "Exit with failed tasks: ${red}$(IFS=:; for task in $FAILED_TASKS; do printf "$task "; done)${rf}"
     fi
@@ -512,7 +517,7 @@ else
 fi
 
 # Copy neovim config from apps
-/bin/cp -r "$TMP_REPO_PATH"/apps/nvim "$XDG_CONFIG_HOME"/nvim > $TMP_LOG_FILE 2>&1
+/bin/cp -r "$TMP_REPO_PATH"/apps/nvim "$XDG_CONFIG_HOME" > $TMP_LOG_FILE 2>&1
 if [ $? -ne 0 ]; then pprint_error "Failed to copy neovim config"; pprint_error_info "$(cat $TMP_LOG_FILE)"; FAILED_TASKS="$FAILED_TASKS:$TASK_NAME"; exit 1; fi
 pprint_check "Copied neovim config to $XDG_CONFIG_HOME"
 
