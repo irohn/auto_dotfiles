@@ -17,6 +17,7 @@ tssh() {
     matches=$(list_clusters | grep "$1")
     cluster=$(printf $matches | fzf --select-1 | cut -d' ' -f1)
     target_host=$(tailscale status | awk '!/k3s-/ {print $2}' | grep -m 1 "$cluster")
+    printf "Connecting to %s\n" "$cluster"
     ssh -i ~/.ssh/greenboard.uu -o StrictHostKeyChecking=no green@"$target_host"
 }
 
