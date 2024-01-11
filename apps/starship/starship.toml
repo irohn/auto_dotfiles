@@ -1,6 +1,6 @@
 
 add_newline = false
-format = "$os$username$hostname$kubernetes$directory$git_branch$git_status"
+format = "$os$username$hostname$kubernetes$directory$git_branch$git_status\\$ "
 
 # ---
 
@@ -54,9 +54,10 @@ format = 'at [$path]($style)[$read_only]($read_only_style) '
 
 [kubernetes]
 format = '[$symbol$context](blue) '
-disabled = true
+disabled = false
 [kubernetes.context_aliases]
 'k3s-(?P<mac>.*).tail.*.ts.net' = '$mac'
+'gke_.*_(?P<cluster>[\\w-]+)' = '$cluster'
 
 [battery]
 full_symbol = "• "
